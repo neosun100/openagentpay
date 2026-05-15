@@ -1,0 +1,48 @@
+{
+  "name": "openagentpay",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Open, pluggable Agent Payments platform for AWS Bedrock AgentCore. Any wallet, any protocol, any governance.",
+  "license": "Apache-2.0",
+  "author": "Neo Sun <neosun100@github>",
+  "homepage": "https://github.com/neosun100/openagentpay",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neosun100/openagentpay.git"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@11.1.2",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "tsx": "^4.19.0",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0"
+  },
+  "keywords": [
+    "agentcore",
+    "ai-agent",
+    "payments",
+    "x402",
+    "stablecoin",
+    "binance-pay",
+    "okx-pay",
+    "agent-payments",
+    "open-source",
+    "aws"
+  ]
+}

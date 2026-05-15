@@ -1,0 +1,77 @@
+# --- Node / TypeScript ---
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+.next/
+coverage/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.venv/
+venv/
+env/
+.python-version
+htmlcov/
+.coverage
+.coverage.*
+*.egg
+
+# --- AWS CDK ---
+cdk.out/
+cdk.context.json
+.cdk.staging/
+
+# --- IDE / OS ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.history/
+
+# --- Secrets / Env ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials.json
+
+# --- Build artifacts ---
+*.tar.gz
+*.zip
+*.tgz
+
+# --- Test outputs ---
+test-results/
+playwright-report/
+.playwright-mcp/
+*.snap
+
+# --- Logs ---
+logs/
+*.log
+
+# --- Worktrees ---
+.claude/worktrees/
+
+# --- Local sandbox / experimentation ---
+sandbox/
+scratch/

@@ -1,0 +1,27 @@
+{
+  "name": "@openagentpay/wallet-binance",
+  "version": "0.1.0-alpha.0",
+  "description": "Binance Pay wallet connector for OpenAgentPay. First non-Coinbase wallet integration.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*"
+  },
+  "keywords": ["binance", "binance-pay", "wallet-connector"]
+}

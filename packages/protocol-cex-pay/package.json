@@ -1,0 +1,26 @@
+{
+  "name": "@openagentpay/protocol-cex-pay",
+  "version": "0.1.0-alpha.0",
+  "description": "OpenAgentPay Custom CEX Pay (OAP-CEX) v0.1 protocol adapter — for non-EIP-3009 CEX-internal payment rails.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "src", "doc"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*"
+  },
+  "keywords": ["oap", "cex-pay", "protocol-adapter"]
+}

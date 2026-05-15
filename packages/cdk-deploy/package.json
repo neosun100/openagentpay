@@ -1,0 +1,31 @@
+{
+  "name": "@openagentpay/cdk-deploy",
+  "version": "0.1.0-alpha.0",
+  "description": "AWS CDK infrastructure for OpenAgentPay (Lambda Function URL, DynamoDB, Secrets Manager, CloudWatch).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "openagentpay-cdk": "./bin/app.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --all",
+    "diff": "cdk diff",
+    "destroy": "cdk destroy --all",
+    "clean": "rm -rf dist cdk.out *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*",
+    "@openagentpay/wallet-binance": "workspace:*",
+    "@openagentpay/protocol-cex-pay": "workspace:*",
+    "aws-cdk-lib": "^2.160.0",
+    "constructs": "^10.4.0"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.160.0"
+  }
+}

@@ -1,0 +1,23 @@
+[project]
+name = "openagentpay-workspace"
+version = "0.1.0a0"
+description = "OpenAgentPay Python workspace root (uv workspace)."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+
+[tool.uv.workspace]
+members = [
+    "packages/python-sdk",
+    "packages/strands-plugin",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.5.0",
+]
