@@ -1,12 +1,12 @@
 /**
- * @openagentpay/wallet-binance — Public entrypoint.
+ * @openagentpay/wallet-binance public entrypoint.
  *
- * Exports BinancePayClient (low-level REST) and BinancePayConnector
- * (WalletConnector-conformant high-level wrapper).
+ * Re-exports both the low-level REST client and the high-level WalletConnector.
  *
  * @license Apache-2.0
  */
 
+// REST client
 export {
   BinancePayClient,
   BinancePayError,
@@ -18,3 +18,12 @@ export {
   type QueryBalanceInput,
   type QueryBalanceResponse,
 } from "./binance-client.js";
+
+// WalletConnector
+export {
+  BinancePayConnector,
+  WALLET_PROVIDER_ID,
+  MemoryInstrumentStore,
+  type BinancePayConnectorConfig,
+  type InstrumentStore,
+} from "./connector.js";

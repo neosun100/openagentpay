@@ -24,9 +24,13 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "clean": "pnpm -r clean && rm -rf node_modules"
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "smoke:binance": "node --experimental-strip-types --no-warnings scripts/binance-smoke.ts"
   },
   "devDependencies": {
+    "@openagentpay/core": "workspace:*",
+    "@openagentpay/protocol-cex-pay": "workspace:*",
+    "@openagentpay/wallet-binance": "workspace:*",
     "@types/node": "^22.0.0",
     "typescript": "^5.5.0",
     "tsx": "^4.19.0",

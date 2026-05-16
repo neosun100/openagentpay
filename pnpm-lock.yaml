@@ -8,6 +8,15 @@ importers:
 
   .:
     devDependencies:
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@openagentpay/protocol-cex-pay':
+        specifier: workspace:*
+        version: link:packages/protocol-cex-pay
+      '@openagentpay/wallet-binance':
+        specifier: workspace:*
+        version: link:packages/wallet-binance
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.19
@@ -59,6 +68,9 @@ importers:
       '@openagentpay/core':
         specifier: workspace:*
         version: link:../core
+      '@openagentpay/protocol-cex-pay':
+        specifier: workspace:*
+        version: link:../protocol-cex-pay
 
 packages:
 

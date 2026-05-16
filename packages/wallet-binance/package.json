@@ -10,7 +10,8 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["dist", "src"],
   "scripts": {
@@ -21,7 +22,8 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@openagentpay/core": "workspace:*"
+    "@openagentpay/core": "workspace:*",
+    "@openagentpay/protocol-cex-pay": "workspace:*"
   },
   "keywords": ["binance", "binance-pay", "wallet-connector"]
 }

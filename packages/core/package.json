@@ -14,7 +14,8 @@
     "./types": {
       "import": "./dist/types.js",
       "types": "./dist/types.d.ts"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["dist", "src"],
   "scripts": {
@@ -23,6 +24,5 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist *.tsbuildinfo"
-  },
-  "keywords": ["agentcore", "agent-payments", "interfaces"]
+  },  "keywords": ["agentcore", "agent-payments", "interfaces"]
 }
