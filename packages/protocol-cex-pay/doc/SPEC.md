@@ -242,7 +242,7 @@ The Agent's ProtocolRouter then chooses based on installed connectors and policy
 - [x402 Specification](https://github.com/coinbase/x402/tree/main/specs) — Coinbase x402 protocol
 - [EIP-3009] — Transfer with authorization (used by x402)
 - [Binance Pay API](https://developers.binance.com/docs/binance-pay/) — Reference CEX provider
-- [OAP-CEX repository](https://github.com/neosun100/openagentpay/tree/main/packages/protocol-cex-pay) — Implementation
+- [OAP-CEX repository](https://github.com/neosun100/openAgentPay/tree/main/packages/protocol-cex-pay) — Implementation
 
 ## Appendix A · MVP Scope (v0.1.0-alpha)
 

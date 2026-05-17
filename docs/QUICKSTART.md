@@ -14,8 +14,8 @@
 ## Step 1 — 拿到代码 + 装依赖
 
 ```bash
-git clone https://github.com/neosun100/openagentpay
-cd openagentpay
+git clone https://github.com/neosun100/openAgentPay
+cd openAgentPay
 pnpm install
 ```
 

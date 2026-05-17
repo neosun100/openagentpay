@@ -191,8 +191,8 @@ Step 4️⃣  链上验证转账完成
 
 ```bash
 # 1. clone
-git clone https://github.com/neosun100/openagentpay
-cd openagentpay
+git clone https://github.com/neosun100/openAgentPay
+cd openAgentPay
 
 # 2. 生成自己的 testnet 钱包
 python3 -c "from eth_account import Account; import secrets; a = Account.create(secrets.token_hex(32)); print(f'Address: {a.address}\nPrivateKey: {a.key.hex()}')"

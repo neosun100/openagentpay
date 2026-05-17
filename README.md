@@ -28,7 +28,7 @@
 ## 🚀 What you'll see in 5 minutes
 
 ```bash
-git clone https://github.com/neosun100/openagentpay && cd openagentpay
+git clone https://github.com/neosun100/openAgentPay && cd openAgentPay
 pnpm install
 # (configure .env.local — see docs/QUICKSTART.md)
 pnpm demo
@@ -169,8 +169,8 @@ OpenAgentPay 不是想法，是已经在 HashKey Chain Testnet 上跑通的事�
 详细 5 分钟指南：[docs/QUICKSTART.md](./docs/QUICKSTART.md)
 
 ```bash
-git clone https://github.com/neosun100/openagentpay
-cd openagentpay
+git clone https://github.com/neosun100/openAgentPay
+cd openAgentPay
 pnpm install
 # 配置 .env.local（见 QUICKSTART）
 pnpm demo

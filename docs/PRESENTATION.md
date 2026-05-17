@@ -165,7 +165,7 @@ Lambda 上链：https://testnet-explorer.hsk.xyz/tx/0xd18cb0f19359bdaae17aa89a0e
 
 ### GitHub 仓库（开源证据）
 ```
-https://github.com/neosun100/openagentpay
+https://github.com/neosun100/openAgentPay
 ```
 
 ### 备份 URLs（万一主 URL 出问题）
@@ -219,7 +219,7 @@ https://yxhi4anykqinsxszhyi4z5icdq0usfmv.lambda-url.us-east-1.on.aws/api/health
 - [ ] 浏览器 5 个 Tab 备好：
   1. https://d1p7yxa99nxaye.cloudfront.net
   2. https://testnet-explorer.hsk.xyz/address/0x0685C487Df4Cc0723Aa828C299686798294E9803
-  3. https://github.com/neosun100/openagentpay
+  3. https://github.com/neosun100/openAgentPay
   4. 这份 PRESENTATION.md
   5. 备用 Lambda URL
 - [ ] 笔记本预备本地 demo：`pnpm demo`（备份）

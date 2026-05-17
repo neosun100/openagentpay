@@ -24,7 +24,7 @@ export function App() {
             Demo · 路径 D 混合方案 · {walletProvider}
           </span>
           <a
-            href="https://github.com/neosun100/openagentpay"
+            href="https://github.com/neosun100/openAgentPay"
             target="_blank"
             rel="noreferrer"
             style={{ fontSize: 12 }}

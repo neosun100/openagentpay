@@ -5,10 +5,10 @@
   "description": "Open, pluggable Agent Payments platform for AWS Bedrock AgentCore. Any wallet, any protocol, any governance.",
   "license": "Apache-2.0",
   "author": "Neo Sun <neosun100@github>",
-  "homepage": "https://github.com/neosun100/openagentpay",
+  "homepage": "https://github.com/neosun100/openAgentPay",
   "repository": {
     "type": "git",
-    "url": "https://github.com/neosun100/openagentpay.git"
+    "url": "https://github.com/neosun100/openAgentPay.git"
   },
   "engines": {
     "node": ">=20",
