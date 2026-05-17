@@ -75,3 +75,4 @@ logs/
 # --- Local sandbox / experimentation ---
 sandbox/
 scratch/
+*~$*
