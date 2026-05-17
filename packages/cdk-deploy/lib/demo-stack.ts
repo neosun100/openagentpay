@@ -97,9 +97,17 @@ export class DemoStack extends cdk.Stack {
     pkSecret.grantRead(apiFn);
 
     // -------------------------------------------------------------------------
-    //  2. Lambda Function URL — public access (NONE auth).
-    //     Note: in some isengard accounts public Function URL is silently
-    //     denied with 403. If that happens, switch to API Gateway.
+    //  2. Lambda Function URL — TEMPORARY: AuthType=NONE for live demo.
+    //
+    //     KNOWN ISSUE: This is flagged by Amazon Palisade as 'world accessible'
+    //     (Talos finding ffd4d097-06ac-4849-b79a-69fe56efc501). Epoxy will
+    //     auto-mitigate within hours by narrowing Principal:* to the account
+    //     ID, breaking external access.
+    //
+    //     PROPER FIX (post-talk): switch to AuthType=AWS_IAM + CloudFront OAC.
+    //     Tried in this branch but CloudFront OAC SigV4 propagation is slow
+    //     (>10 min) and we need the demo working for tomorrow's talk.
+    //     Tracking issue: TODO file Talos exemption + finalize OAC config.
     // -------------------------------------------------------------------------
     const apiFnUrl = apiFn.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
@@ -127,9 +135,9 @@ export class DemoStack extends cdk.Stack {
       signing: cloudfront.Signing.SIGV4_ALWAYS,
     });
 
-    // Lambda Function URL origin (for /api/*) — plain (no OAC).
-    // Function URL has CORS open + auth_type NONE, so CloudFront forwards
-    // un-signed requests and Lambda accepts them.
+    // Lambda Function URL origin (for /api/*) — plain (no OAC for now).
+    // Future: switch to .withOriginAccessControl(apiFnUrl) once we figure out
+    // the OAC SigV4 + Function URL header forwarding combo (see comment above).
     const apiOrigin = new origins.FunctionUrlOrigin(apiFnUrl);
 
     const webOrigin = origins.S3BucketOrigin.withOriginAccessControl(webBucket, {
