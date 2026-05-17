@@ -1,0 +1,25 @@
+{
+  "name": "@openagentpay/demo-api",
+  "version": "0.1.0-alpha.0",
+  "description": "Local-dev Express HTTP server for OpenAgentPay demo (becomes Lambda Function URL in production).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "echo '[demo-api] no tests yet' && exit 0",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*",
+    "@openagentpay/wallet-hashkey": "workspace:*",
+    "express": "^4.21.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17"
+  }
+}
