@@ -166,7 +166,7 @@ openagentpay/
 │   ├── cdk-deploy/            # AWS CDK Infrastructure
 │   └── python-sdk/            # Python SDK
 ├── apps/
-│   ├── demo-api/              # Express server (→ Lambda Function URL)
+│   ├── demo-api/              # Express server (→ API Gateway → Lambda)
 │   └── demo-web/              # Vite + React three-tab UI
 ├── scripts/
 │   ├── binance-smoke.ts       # Binance Pay sandbox e2e
@@ -235,7 +235,7 @@ python3 scripts/hashkey/transfer-with-auth.py   # Python ref impl
 - [x] 端到端 demo 跑通（local + AWS 生产）
 
 ### ✅ Phase 2 · AWS 生产部署（已完成 2026-05-17）
-- [x] CDK Stack：Lambda Function URL + CloudFront + S3 + Secrets Manager (KMS)
+- [x] CDK Stack：API Gateway HTTP API + Lambda + CloudFront + S3 + Secrets Manager (KMS)
 - [x] 浏览器 → CloudFront → Lambda → Secrets Manager → HashKey Chain 全链路真实运行
 - [x] **Live URL**: https://d1p7yxa99nxaye.cloudfront.net
 - [x] AWS Lambda 上链 verified ([tx 0xd18cb0f1...](https://testnet-explorer.hsk.xyz/tx/0xd18cb0f19359bdaae17aa89a0e14c47ccb7793579b9a09ac0423eefb1390a06a))

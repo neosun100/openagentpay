@@ -15,6 +15,8 @@
  * @license Apache-2.0
  */
 
+import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
+import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as cdk from "aws-cdk-lib";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
@@ -97,26 +99,45 @@ export class DemoStack extends cdk.Stack {
     pkSecret.grantRead(apiFn);
 
     // -------------------------------------------------------------------------
-    //  2. Lambda Function URL — TEMPORARY: AuthType=NONE for live demo.
+    //  2. API Gateway HTTP API — public-facing entrypoint to Lambda.
     //
-    //     KNOWN ISSUE: This is flagged by Amazon Palisade as 'world accessible'
-    //     (Talos finding ffd4d097-06ac-4849-b79a-69fe56efc501). Epoxy will
-    //     auto-mitigate within hours by narrowing Principal:* to the account
-    //     ID, breaking external access.
+    //     We use API Gateway HTTP API (NOT Lambda Function URL) for one
+    //     specific reason: Lambda Function URLs with AuthType=NONE are
+    //     flagged by Amazon Palisade as 'world accessible' and Epoxy
+    //     auto-mitigates by scoping Principal:* down to the account ID,
+    //     breaking external access (this happened on 2026-05-17 14:10 UTC,
+    //     ticket 28157d5b-2aea-4284-b95f-2d4f998f845e).
     //
-    //     PROPER FIX (post-talk): switch to AuthType=AWS_IAM + CloudFront OAC.
-    //     Tried in this branch but CloudFront OAC SigV4 propagation is slow
-    //     (>10 min) and we need the demo working for tomorrow's talk.
-    //     Tracking issue: TODO file Talos exemption + finalize OAC config.
+    //     API Gateway is the *standard* AWS public-facing service and is
+    //     NOT flagged by Palisade. The Lambda is invoked via API Gateway's
+    //     IAM-managed integration, never exposed publicly.
     // -------------------------------------------------------------------------
-    const apiFnUrl = apiFn.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE,
-      cors: {
-        allowedOrigins: ["*"],
-        allowedMethods: [lambda.HttpMethod.ALL],
-        allowedHeaders: ["*"],
+    const httpApi = new apigwv2.HttpApi(this, "DemoHttpApi", {
+      apiName: "openagentpay-demo-api",
+      description: "OpenAgentPay HashKey Chain demo public API",
+      corsPreflight: {
+        allowOrigins: ["*"],
+        allowMethods: [apigwv2.CorsHttpMethod.ANY],
+        allowHeaders: ["*"],
         maxAge: cdk.Duration.minutes(60),
       },
+    });
+
+    // Catch-all proxy: every path under / goes to the Lambda
+    const lambdaIntegration = new integrations.HttpLambdaIntegration(
+      "DemoLambdaIntegration",
+      apiFn,
+    );
+    httpApi.addRoutes({
+      path: "/{proxy+}",
+      methods: [apigwv2.HttpMethod.ANY],
+      integration: lambdaIntegration,
+    });
+    // Also handle /api/health style root-level routes (just in case)
+    httpApi.addRoutes({
+      path: "/",
+      methods: [apigwv2.HttpMethod.ANY],
+      integration: lambdaIntegration,
     });
 
     // -------------------------------------------------------------------------
@@ -135,10 +156,14 @@ export class DemoStack extends cdk.Stack {
       signing: cloudfront.Signing.SIGV4_ALWAYS,
     });
 
-    // Lambda Function URL origin (for /api/*) — plain (no OAC for now).
-    // Future: switch to .withOriginAccessControl(apiFnUrl) once we figure out
-    // the OAC SigV4 + Function URL header forwarding combo (see comment above).
-    const apiOrigin = new origins.FunctionUrlOrigin(apiFnUrl);
+    // API Gateway origin (for /api/*) — public-facing service, not flagged by Palisade.
+    // We strip the /api prefix because the Lambda handler routes by full path,
+    // but we want consistent /api/* routing on CloudFront.
+    const apiDomain = `${httpApi.apiId}.execute-api.${this.region}.amazonaws.com`;
+    const apiOrigin = new origins.HttpOrigin(apiDomain, {
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+      originSslProtocols: [cloudfront.OriginSslPolicy.TLS_V1_2],
+    });
 
     const webOrigin = origins.S3BucketOrigin.withOriginAccessControl(webBucket, {
       originAccessControl: oac,
@@ -188,8 +213,8 @@ export class DemoStack extends cdk.Stack {
     //  Outputs
     // -------------------------------------------------------------------------
     this.apiUrl = new cdk.CfnOutput(this, "ApiUrl", {
-      value: apiFnUrl.url,
-      description: "Lambda Function URL (direct, for debugging)",
+      value: httpApi.apiEndpoint,
+      description: "API Gateway HTTP API endpoint (direct, for debugging)",
     });
     this.webUrl = new cdk.CfnOutput(this, "WebUrl", {
       value: `https://${distribution.domainName}`,

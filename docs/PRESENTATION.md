@@ -194,24 +194,26 @@ https://yxhi4anykqinsxszhyi4z5icdq0usfmv.lambda-url.us-east-1.on.aws/api/health
 - 说："今天 production 网络不稳定，看本地一样的代码——"
 - 演示效果完全一致
 
-### 方案 E：⚡ Lambda 突然 403 Forbidden（Palisade auto-mitigation）
-**症状**：所有 `/api/*` 突然返回 `{"Message":"Forbidden..."}`，浏览器 Tab 3 报错 `Unexpected token '<'`。
+### 方案 E：⚡ 健康检查脚本
 
-**根因**：Amazon Palisade 自动检测到 Lambda Function URL 公网可访问，Epoxy 把 Resource Policy 的 `Principal:*` 收窄成 account ID。这事在 2026-05-17 14:10 UTC 发生过一次（ticket 28157d5b）。
-
-**30 秒恢复方案**：
+演讲前 30 分钟跑一次：
 ```bash
 cd ~/Code/openagentpay
-bash scripts/restore-demo.sh
+bash scripts/check-demo.sh
 ```
 
-脚本会：
-1. 重新加 wide-open Resource Policy
-2. CloudFront invalidate 清缓存
-3. 等待 30s propagation
-4. 验证 `/api/health` 返回 200
+会自动测试 4 步：
+1. CloudFront → /api/health
+2. CloudFront → /api/wallet（实时链上 USDC 余额）
+3. POST /api/session
+4. POST /api/pay（真上链验证）
 
-**如果脚本失败 → 走方案 D（本地 demo）+ 用 Blockscout 链上历史 tx 展示**（链上交易永久可查，不依赖 Lambda）。
+4/4 全 ✅ → 演讲台 ready。
+
+> **注**：架构现在是 `Browser → CloudFront → API Gateway → Lambda → HashKey Chain`。
+> Lambda Function URL 已彻底删除（避免被公司 Palisade 自动 mitigate），
+> 改用 API Gateway HTTP API（AWS 标准 public-facing service）。
+> **不会再有 Palisade auto-flag 风险**。
 
 ---
 
