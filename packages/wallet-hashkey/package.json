@@ -1,0 +1,29 @@
+{
+  "name": "@openagentpay/wallet-hashkey",
+  "version": "0.1.0-alpha.0",
+  "description": "HashKey Chain self-custodial EVM wallet connector for OpenAgentPay. Implements x402 / EIP-3009 transferWithAuthorization on HashKey Chain Testnet (chainId 133) and Mainnet (177).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*",
+    "viem": "^2.21.0"
+  },
+  "keywords": ["hashkey", "hashkey-chain", "evm", "x402", "eip-3009", "wallet-connector"]
+}
