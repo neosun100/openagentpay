@@ -37,12 +37,13 @@
     "@openagentpay/wallet-binance": "workspace:*",
     "@openagentpay/wallet-hashkey": "workspace:*",
     "@types/node": "^22.0.0",
-    "typescript": "^5.5.0",
-    "tsx": "^4.19.0",
-    "viem": "^2.21.0",
-    "vitest": "^2.1.0",
     "@vitest/coverage-v8": "^2.1.0",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.24.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "viem": "^2.21.0",
+    "vitest": "^2.1.0"
   },
   "keywords": [
     "agentcore",

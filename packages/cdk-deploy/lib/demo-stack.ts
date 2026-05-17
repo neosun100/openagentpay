@@ -96,6 +96,11 @@ export class DemoStack extends cdk.Stack {
     // Grant Lambda permission to read the secret
     pkSecret.grantRead(apiFn);
 
+    // -------------------------------------------------------------------------
+    //  2. Lambda Function URL — public access (NONE auth).
+    //     Note: in some isengard accounts public Function URL is silently
+    //     denied with 403. If that happens, switch to API Gateway.
+    // -------------------------------------------------------------------------
     const apiFnUrl = apiFn.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
       cors: {
@@ -122,12 +127,10 @@ export class DemoStack extends cdk.Stack {
       signing: cloudfront.Signing.SIGV4_ALWAYS,
     });
 
-    // Lambda Function URL origin (for /api/*)
-    // Function URLs don't expose cleanly in cloudfront-origins; use HttpOrigin
-    // with the URL's hostname (the cdk.Fn.parseDomainName helper).
-    const apiOrigin = new origins.FunctionUrlOrigin(apiFnUrl, {
-      // Forward Host? No — Lambda URL expects its own host
-    });
+    // Lambda Function URL origin (for /api/*) — plain (no OAC).
+    // Function URL has CORS open + auth_type NONE, so CloudFront forwards
+    // un-signed requests and Lambda accepts them.
+    const apiOrigin = new origins.FunctionUrlOrigin(apiFnUrl);
 
     const webOrigin = origins.S3BucketOrigin.withOriginAccessControl(webBucket, {
       originAccessControl: oac,
@@ -153,18 +156,10 @@ export class DemoStack extends cdk.Stack {
         },
       },
       defaultRootObject: "index.html",
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html",
-        },
-        {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: "/index.html",
-        },
-      ],
+      // errorResponses removed intentionally:
+      //   when /api/* errors (e.g. Lambda 403), CloudFront would serve
+      //   index.html and cache it for ~15 min, masking real API errors.
+      //   This demo is a single-page app — no client-side routing needs SPA fallback.
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // US/EU/India only — cheaper
       comment: "OpenAgentPay × HashKey Chain Demo",
     });
