@@ -26,7 +26,10 @@
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean && rm -rf node_modules",
     "smoke:binance": "node --experimental-strip-types --no-warnings scripts/binance-smoke.ts",
-    "smoke:hashkey": "node --experimental-strip-types --no-warnings scripts/hashkey-smoke.ts"
+    "smoke:hashkey": "node --experimental-strip-types --no-warnings scripts/hashkey-smoke.ts",
+    "demo:api": "pnpm --filter @openagentpay/demo-api start",
+    "demo:web": "pnpm --filter @openagentpay/demo-web dev",
+    "demo": "concurrently -n api,web -c \"#a18cd1\",\"#fbc2eb\" \"pnpm demo:api\" \"pnpm demo:web\""
   },
   "devDependencies": {
     "@openagentpay/core": "workspace:*",
@@ -38,7 +41,8 @@
     "tsx": "^4.19.0",
     "viem": "^2.21.0",
     "vitest": "^2.1.0",
-    "@vitest/coverage-v8": "^2.1.0"
+    "@vitest/coverage-v8": "^2.1.0",
+    "concurrently": "^8.2.2"
   },
   "keywords": [
     "agentcore",
