@@ -11,21 +11,24 @@
   "scripts": {
     "build": "tsc",
     "test": "echo '[cdk-deploy] tests deferred to W3' && exit 0",
-    "typecheck": "echo '[cdk-deploy] typecheck deferred to W3' && exit 0",
-    "synth": "cdk synth",
-    "deploy": "cdk deploy --all",
-    "diff": "cdk diff",
-    "destroy": "cdk destroy --all",
-    "clean": "rm -rf dist cdk.out *.tsbuildinfo"
+    "typecheck": "tsc --noEmit",
+    "synth": "tsc && cdk synth",
+    "deploy": "tsc && cdk deploy --all --require-approval never",
+    "diff": "tsc && cdk diff",
+    "destroy": "cdk destroy --all --force",
+    "clean": "rm -rf cdk.out *.tsbuildinfo bin/*.js bin/*.d.ts lib/*.js lib/*.d.ts"
   },
   "dependencies": {
     "@openagentpay/core": "workspace:*",
     "@openagentpay/wallet-binance": "workspace:*",
+    "@openagentpay/wallet-hashkey": "workspace:*",
     "@openagentpay/protocol-cex-pay": "workspace:*",
+    "@openagentpay/demo-api": "workspace:*",
     "aws-cdk-lib": "^2.160.0",
     "constructs": "^10.4.0"
   },
   "devDependencies": {
-    "aws-cdk": "^2.160.0"
+    "aws-cdk": "^2.160.0",
+    "esbuild": "^0.24.0"
   }
 }

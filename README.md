@@ -3,10 +3,25 @@
 > 🌐 **Open, pluggable Agent Payments platform** for AWS Bedrock AgentCore — any wallet, any protocol, any governance.
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-MVP_demo_live-brightgreen)](#-live-demo)
+[![Status](https://img.shields.io/badge/status-Live_on_AWS-brightgreen)](https://d1p7yxa99nxaye.cloudfront.net)
 [![Made for](https://img.shields.io/badge/Made_for-AWS_Bedrock_AgentCore-FF9900)](https://aws.amazon.com/bedrock/agentcore/)
 [![HashKey Chain](https://img.shields.io/badge/Live_on-HashKey_Chain_Testnet-purple)](https://testnet-explorer.hsk.xyz/address/0x0685C487Df4Cc0723Aa828C299686798294E9803)
 [![Tests](https://img.shields.io/badge/tests-82_passing-brightgreen)](#)
+
+> **🌐 Live demo**: https://d1p7yxa99nxaye.cloudfront.net （已部署到 AWS us-east-1，CloudFront + Lambda + Secrets Manager）
+>
+> **🚀 Live update (2026-05-17)**: OpenAgentPay 端到端 demo 已经在 **HashKey Chain Testnet** 上跑通：
+> 浏览器 → CloudFront → AWS Lambda (us-east-1) → Secrets Manager 取私钥 → EIP-712 签名 →
+> HashKey Chain Testnet 上链 → 在 Blockscout immutable 可查。
+>
+> **协议层与 AWS AgentCore Payments / Coinbase CDP / Base Sepolia 路径完全对等**
+> ——业务代码层面只换一行 `walletProvider`。
+>
+> 详见 [📋 战略文档](./docs/STRATEGY.md) ·
+> [⚡ Quickstart](./docs/QUICKSTART.md) ·
+> [🔬 HashKey 链上 demo 复现指南](./docs/HASHKEY_DEMO.md) ·
+> [🎤 演讲材料](./docs/PRESENTATION.md) ·
+> [📚 参考代码 vendor 计划](./docs/REFERENCES.md)。
 
 ---
 

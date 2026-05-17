@@ -21,7 +21,7 @@ import {
   processPayment,
   type ApiError,
 } from "./handlers.js";
-import { context } from "./context.js";
+import { context, ensureContext } from "./context.js";
 import type { SessionId } from "@openagentpay/core";
 
 const PORT = Number(process.env["PORT"] ?? 8787);
@@ -122,30 +122,32 @@ function handleError(res: Response, err: unknown): void {
 // ----------------------------------------------------------------------------
 //  Boot — eager-init context to fail fast on missing env
 // ----------------------------------------------------------------------------
-try {
-  const ctx = context();
-  app.listen(PORT, () => {
-    console.log("");
-    console.log(color("════════════════════════════════════════════════════════════════", 36));
-    console.log(color("  🌐 OpenAgentPay × HashKey Chain — Demo API", 36));
-    console.log(color("════════════════════════════════════════════════════════════════", 36));
-    console.log(`  Listening on:    ${color(`http://localhost:${PORT}`, 36)}`);
-    console.log(`  Agent address:   ${color(ctx.connector.agentAddress, 36)}`);
-    console.log(`  Token address:   ${color(ctx.tokenAddress, 36)}`);
-    console.log(`  Network:         HashKey Chain Testnet (chainId=133)`);
-    console.log("");
-    console.log(`  Endpoints:`);
-    console.log(`    GET  /api/health`);
-    console.log(`    GET  /api/wallet`);
-    console.log(`    POST /api/session   { budgetUsd, expiryMinutes }`);
-    console.log(`    GET  /api/session/:id`);
-    console.log(`    POST /api/pay       { sessionId, amountUsdc, recipient? }`);
-    console.log("");
+ensureContext()
+  .then(() => {
+    const ctx = context();
+    app.listen(PORT, () => {
+      console.log("");
+      console.log(color("════════════════════════════════════════════════════════════════", 36));
+      console.log(color("  🌐 OpenAgentPay × HashKey Chain — Demo API", 36));
+      console.log(color("════════════════════════════════════════════════════════════════", 36));
+      console.log(`  Listening on:    ${color(`http://localhost:${PORT}`, 36)}`);
+      console.log(`  Agent address:   ${color(ctx.connector.agentAddress, 36)}`);
+      console.log(`  Token address:   ${color(ctx.tokenAddress, 36)}`);
+      console.log(`  Network:         HashKey Chain Testnet (chainId=133)`);
+      console.log("");
+      console.log(`  Endpoints:`);
+      console.log(`    GET  /api/health`);
+      console.log(`    GET  /api/wallet`);
+      console.log(`    POST /api/session   { budgetUsd, expiryMinutes }`);
+      console.log(`    GET  /api/session/:id`);
+      console.log(`    POST /api/pay       { sessionId, amountUsdc, recipient? }`);
+      console.log("");
+    });
+  })
+  .catch((err: Error) => {
+    console.error(color("\n❌ Failed to boot demo-api:", 31), err.message);
+    process.exit(1);
   });
-} catch (err) {
-  console.error(color("\n❌ Failed to boot demo-api:", 31), (err as Error).message);
-  process.exit(1);
-}
 
 // ----------------------------------------------------------------------------
 //  helpers
