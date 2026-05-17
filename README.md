@@ -73,6 +73,37 @@ OpenAgentPay 让你**保留 AgentCore 的 Runtime / Identity / Gateway / Observa
 
 ---
 
+## 🤔 为什么需要两个协议？x402 + OAP-CEX 双轨
+
+> 演讲常被问到的核心问题：**"既然 x402 这么好，为什么 Binance 不直接用 x402？"**
+
+**简短回答**：x402 是**链上协议**，但 Binance / OKX / Bitget 这类 CEX **结构上不上链**。强行套 x402 等于让中心化数据库假装成 ERC-20 合约——既笨拙又违背 CEX 的低成本优势。
+
+**详细对比**：
+
+| 维度 | x402（链上路径） | OAP-CEX（CEX 路径） |
+|---|---|---|
+| **签名层** | EIP-712 typed data + secp256k1 ECDSA | 钱包商 API key + HMAC-SHA256/512 |
+| **结算层** | 公链上 EIP-3009 `transferWithAuthorization` | CEX 内部账本记账（off-chain） |
+| **接收方标识** | 以太坊地址 `0x...` | CEX 内部 merchant ID |
+| **谁付 gas** | Facilitator 替 Agent 付 gas | 没有 gas（CEX 不上链） |
+| **结算时间** | ~5 秒（取决于链） | ~50ms（CEX 内部记账） |
+| **成本** | gas + facilitator 费用 | 钱包商收取 % 手续费（一般更低） |
+| **适用钱包** | Coinbase CDP · Stripe Privy · HashKey Chain · MetaMask · WalletConnect · 任何 EIP-3009 EVM 钱包 | Binance Pay · OKX Pay · Bitget Wallet · Bybit · HashKey Pro Sandbox · 未来支付宝/微信 |
+
+**关键 insight**：x402 协议的**形状**很好（402 challenge → sign → retry），但**加密层应该可插拔**。所以我们：
+
+- **x402** = 协议形状 + **EIP-712 签名层**（链上钱包用）
+- **OAP-CEX** = 同样的协议形状 + **HMAC 签名层**（CEX 用）
+
+两个协议**共享 ProtocolAdapter 接口**——`PaymentManager` 通过 ProtocolRouter 自动按 402 response signature 派发。开发者业务代码层面**只换一行 `walletProvider`**，剩下都是协议层自动处理。
+
+这就是为什么 OpenAgentPay 既能跑通 HashKey Chain 链上结算（x402），也能跑通 Binance Pay CEX 内部结算（OAP-CEX）——**用同一套 PaymentManager**。
+
+**协议规范全文**：[`packages/protocol-cex-pay/doc/SPEC.md`](./packages/protocol-cex-pay/doc/SPEC.md) （24 页 IETF-style draft，向后兼容 x402）。
+
+---
+
 ## 🎬 Live Demo
 
 ### Tab 1: Run Demo · 4 步手动跑链上结算

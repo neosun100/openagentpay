@@ -200,14 +200,15 @@ https://yxhi4anykqinsxszhyi4z5icdq0usfmv.lambda-url.us-east-1.on.aws/api/health
 
 | 问题 | 答案要点 |
 |---|---|
+| **"既然 x402 这么好，为什么 Binance 不直接用 x402？"** | "x402 是**链上协议**——要求 EIP-712 签名 + EIP-3009 ERC-20 合约 + 公链 settlement。Binance / OKX / Bitget 这些 CEX **结构上不上链**，让中心化数据库假装成 ERC-20 合约既笨拙又违背 CEX 的低成本优势。所以我们做了 **OAP-CEX 协议**——保留 x402 的形状（402 challenge → sign → retry），但**签名层换成 HMAC**（CEX 标准），**结算层换成 CEX 内部记账**。两个协议共享 ProtocolAdapter 接口，业务代码层面只换一行 walletProvider。" |
 | "AWS 会不会自己接 HashKey？" | "Roadmap 写了 'Others* Coming soon'。我们的接口设计就是为了那一天——AWS 开放后我们 connector 直接 register 进去" |
 | "为什么不用 Coinbase x402 facilitator？" | "可以的，OpenAgentPay 协议层兼容。但 testnet 上自跑 facilitator 更可控，避免 nonce 冲突等问题" |
 | "私钥放 Lambda 安全吗？" | "私钥在 Secrets Manager + KMS encrypted at rest，Lambda 用 IAM role 取，不写 code、不写 log" |
 | "性能怎么样？" | "5 秒端到端，跟 Base Sepolia 同量级。HashKey Chain 出块比 Base 还快一点" |
 | "HKDR 什么时候上？" | "HashKey 自己路线图，我们做好 plug 准备。EIP-3009 兼容的任何 ERC20 都即插即用" |
-| "Strands Agent 真接了吗？" | "Tab 3 当前是 mock UI。Phase 2 会接 Bedrock + Strands。**接通后业务代码不用改**——只是 plugin 配置不同" |
+| "Strands Agent 真接了吗？" | "Tab 3 当前是 mock UI。下一步会接 Bedrock + Strands。**接通后业务代码不用改**——只是 plugin 配置不同" |
 | "怎么开源贡献？" | "Apache 2.0 + GitHub。新钱包商按 PaymentAdapter ABC 接口实现 connector，过 conformance test 即可发 npm" |
-| "和 Stripe MPP 是什么关系？" | "MPP 是 Stripe + Tempo 的 IETF Internet-Draft，向后兼容 x402。我们的 ProtocolAdapter 抽象天然支持——v0.3 路线图里" |
+| "和 Stripe MPP 是什么关系？" | "MPP 是 Stripe + Tempo 的 IETF Internet-Draft，向后兼容 x402。我们的 ProtocolAdapter 抽象天然支持——按需求触发就能加" |
 
 ---
 

@@ -133,6 +133,25 @@ AWS Bedrock AgentCore Payments (Preview, 2026-05-07 发布) 的当前限制：
 
 ## 四、协议层：x402 + OAP-CEX 双轨
 
+> **核心 architectural insight**：x402 协议的"形状"（402 challenge → sign → retry）是好的，但"加密层 + 结算层"应该**可插拔**。一个协议无法同时服务链上钱包和 CEX 钱包——它们的世界观根本不一样。
+
+**为什么 Binance 不用 x402？** 因为 x402 在链下世界根本不成立：
+
+| x402 要求 | Binance 现实 | 后果 |
+|---|---|---|
+| EIP-712 typed data 签名 + secp256k1 ECDSA | Binance API 用 HMAC-SHA512 签名 | 签名格式不对应 |
+| EIP-3009 ERC-20 合约调用 | Binance 后端是中心化数据库，不部 ERC-20 | 没有合约可调 |
+| 公链 settlement | CEX 内部账本记账 | 上链反而更慢 + 更贵 |
+| `0x...` 以太坊地址作为 recipient | Binance 用内部 merchant ID | 地址类型不对应 |
+
+**强行套 x402 = 让中心化数据库假装成 ERC-20 合约**，既笨拙又违背 CEX 的低成本优势。
+
+**OpenAgentPay 的解法**：保留 x402 的协议形状，但把签名层 + 结算层抽象出来：
+- **x402** = 协议形状 + EIP-712 签名层（HashKey Chain / Coinbase / MetaMask 用）
+- **OAP-CEX** = 同样协议形状 + HMAC 签名层（Binance Pay / OKX / HashKey Pro 用）
+
+两者共享 `ProtocolAdapter` 接口；`PaymentManager` 通过 `ProtocolRouter` 自动按 402-response signature 派发。**业务代码层面只换一行 `walletProvider`**。
+
 | 维度 | x402 (链上) | OAP-CEX (CEX 内部) |
 |---|---|---|
 | 资产 | EIP-3009 兼容 ERC20 | CEX 支持的任意币种 |
