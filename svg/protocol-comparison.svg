@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700">
+  <defs>
+    <style>text{font-family:'SF Pro Display','Segoe UI',system-ui,sans-serif;font-weight:500}</style>
+    <linearGradient id="x402-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+    <linearGradient id="cex-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#11998e"/><stop offset="100%" stop-color="#38ef7d"/>
+    </linearGradient>
+    <linearGradient id="shared-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="700" rx="16" fill="#0f172a"/>
+
+  <!-- Title -->
+  <text x="400" y="44" text-anchor="middle" font-size="22" font-weight="700" fill="#e2e8f0">x402 vs OAP-CEX · 双轨协议</text>
+  <text x="400" y="68" text-anchor="middle" font-size="13" fill="#94a3b8">同样的协议形状，不同的加密层 + 结算层 → 业务代码层只换一行 walletProvider</text>
+
+  <!-- Shared protocol shape (top) -->
+  <rect x="40" y="100" width="720" height="100" rx="12" fill="#1e293b" stroke="url(#shared-grad)" stroke-width="2.5"/>
+  <text x="400" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#fbbf24"> 共享：协议形状 (HTTP 402 challenge → sign → retry)</text>
+
+  <!-- 3-step flow -->
+  <rect x="60" y="142" width="220" height="44" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="170" y="161" text-anchor="middle" font-size="11" font-weight="700" fill="#cbd5e1">1. GET /resource</text>
+  <text x="170" y="178" text-anchor="middle" font-size="10" fill="#94a3b8">→ 402 challenge</text>
+
+  <rect x="290" y="142" width="220" height="44" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="400" y="161" text-anchor="middle" font-size="11" font-weight="700" fill="#cbd5e1">2. Agent signs</text>
+  <text x="400" y="178" text-anchor="middle" font-size="10" fill="#94a3b8">authorization payload</text>
+
+  <rect x="520" y="142" width="220" height="44" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="630" y="161" text-anchor="middle" font-size="11" font-weight="700" fill="#cbd5e1">3. retry + X-PAYMENT</text>
+  <text x="630" y="178" text-anchor="middle" font-size="10" fill="#94a3b8">→ settle → 200</text>
+
+  <!-- Two protocol columns -->
+  <!-- LEFT: x402 (chain) -->
+  <rect x="40" y="220" width="355" height="430" rx="12" fill="#1e293b" stroke="url(#x402-grad)" stroke-width="2.5"/>
+  <text x="218" y="252" text-anchor="middle" font-size="18" font-weight="700" fill="#a78bfa"> x402  (链上路径)</text>
+  <text x="218" y="274" text-anchor="middle" font-size="11" fill="#94a3b8">EVM 自托管钱包 · 公链 settle</text>
+
+  <!-- table rows: 7 rows -->
+  <rect x="60" y="290" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="310" font-size="10" fill="#94a3b8">签名层</text>
+  <text x="362" y="310" text-anchor="end" font-size="11" font-weight="700" fill="#c4b5fd">EIP-712 · ECDSA</text>
+
+  <rect x="60" y="328" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="348" font-size="10" fill="#94a3b8">结算层</text>
+  <text x="362" y="348" text-anchor="end" font-size="11" font-weight="700" fill="#c4b5fd">EIP-3009 on-chain</text>
+
+  <rect x="60" y="366" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="386" font-size="10" fill="#94a3b8">接收方</text>
+  <text x="362" y="386" text-anchor="end" font-size="11" font-weight="700" fill="#c4b5fd">0x... 以太坊地址</text>
+
+  <rect x="60" y="404" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="424" font-size="10" fill="#94a3b8">谁付 gas</text>
+  <text x="362" y="424" text-anchor="end" font-size="11" font-weight="700" fill="#c4b5fd">Facilitator 替 Agent</text>
+
+  <rect x="60" y="442" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="462" font-size="10" fill="#94a3b8">结算时间</text>
+  <text x="362" y="462" text-anchor="end" font-size="11" font-weight="700" fill="#c4b5fd">~5 秒（链确认）</text>
+
+  <rect x="60" y="480" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="500" font-size="10" fill="#94a3b8">成本</text>
+  <text x="362" y="500" text-anchor="end" font-size="11" font-weight="700" fill="#c4b5fd">gas + facilitator 费</text>
+
+  <!-- wallet examples -->
+  <rect x="60" y="528" width="315" height="106" rx="6" fill="#0f172a" stroke="#a78bfa"/>
+  <text x="218" y="548" text-anchor="middle" font-size="10" font-weight="700" fill="#a78bfa">适用钱包</text>
+  <text x="218" y="568" text-anchor="middle" font-size="11" fill="#cbd5e1">Coinbase CDP · Stripe Privy</text>
+  <text x="218" y="586" text-anchor="middle" font-size="11" fill="#cbd5e1">HashKey Chain  ✓ live</text>
+  <text x="218" y="604" text-anchor="middle" font-size="11" fill="#cbd5e1">MetaMask · WalletConnect</text>
+  <text x="218" y="622" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">任何 EIP-3009 兼容 EVM 钱包</text>
+
+  <!-- RIGHT: OAP-CEX (CEX) -->
+  <rect x="405" y="220" width="355" height="430" rx="12" fill="#1e293b" stroke="url(#cex-grad)" stroke-width="2.5"/>
+  <text x="582" y="252" text-anchor="middle" font-size="18" font-weight="700" fill="#86efac"> OAP-CEX  (CEX 路径)</text>
+  <text x="582" y="274" text-anchor="middle" font-size="11" fill="#94a3b8">CEX 托管钱包 · 内部账本 settle</text>
+
+  <rect x="425" y="290" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="310" font-size="10" fill="#94a3b8">签名层</text>
+  <text x="727" y="310" text-anchor="end" font-size="11" font-weight="700" fill="#86efac">HMAC-SHA256/512</text>
+
+  <rect x="425" y="328" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="348" font-size="10" fill="#94a3b8">结算层</text>
+  <text x="727" y="348" text-anchor="end" font-size="11" font-weight="700" fill="#86efac">CEX 内部账本（off-chain）</text>
+
+  <rect x="425" y="366" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="386" font-size="10" fill="#94a3b8">接收方</text>
+  <text x="727" y="386" text-anchor="end" font-size="11" font-weight="700" fill="#86efac">CEX 内部 merchant ID</text>
+
+  <rect x="425" y="404" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="424" font-size="10" fill="#94a3b8">谁付 gas</text>
+  <text x="727" y="424" text-anchor="end" font-size="11" font-weight="700" fill="#86efac">不上链 → 没 gas</text>
+
+  <rect x="425" y="442" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="462" font-size="10" fill="#94a3b8">结算时间</text>
+  <text x="727" y="462" text-anchor="end" font-size="11" font-weight="700" fill="#86efac">~50ms（内部记账）</text>
+
+  <rect x="425" y="480" width="315" height="32" rx="4" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="500" font-size="10" fill="#94a3b8">成本</text>
+  <text x="727" y="500" text-anchor="end" font-size="11" font-weight="700" fill="#86efac">% 手续费（通常更低）</text>
+
+  <rect x="425" y="528" width="315" height="106" rx="6" fill="#0f172a" stroke="#22c55e"/>
+  <text x="582" y="548" text-anchor="middle" font-size="10" font-weight="700" fill="#86efac">适用钱包</text>
+  <text x="582" y="568" text-anchor="middle" font-size="11" fill="#cbd5e1">Binance Pay  ✓ live</text>
+  <text x="582" y="586" text-anchor="middle" font-size="11" fill="#cbd5e1">OKX Pay · Bitget · Bybit</text>
+  <text x="582" y="604" text-anchor="middle" font-size="11" fill="#cbd5e1">HashKey Pro · 支付宝 · 微信</text>
+  <text x="582" y="622" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">任何 API-key + HMAC 的 CEX/支付服务</text>
+
+  <!-- Bottom callout -->
+  <rect x="40" y="660" width="720" height="32" rx="6" fill="#1e293b" stroke="url(#shared-grad)"/>
+  <text x="400" y="680" text-anchor="middle" font-size="11" font-weight="700" fill="#fbbf24"> 共享 ProtocolAdapter 接口 → PaymentManager 通过 ProtocolRouter 自动按 402 response signature 派发</text>
+</svg>

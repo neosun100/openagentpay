@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 720">
+  <defs>
+    <style>text{font-family:'SF Pro Display','Segoe UI',system-ui,sans-serif;font-weight:500}</style>
+    <linearGradient id="L1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="L2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4facfe"/><stop offset="100%" stop-color="#00f2fe"/>
+    </linearGradient>
+    <linearGradient id="L3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#11998e"/><stop offset="100%" stop-color="#38ef7d"/>
+    </linearGradient>
+    <linearGradient id="L4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9a3c"/><stop offset="100%" stop-color="#ff6a3c"/>
+    </linearGradient>
+    <linearGradient id="L5" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f093fb"/><stop offset="100%" stop-color="#f5576c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="720" rx="16" fill="#0f172a"/>
+
+  <!-- Title -->
+  <text x="400" y="44" text-anchor="middle" font-size="22" font-weight="700" fill="#e2e8f0">OpenAgentPay Platform · 5-Layer Architecture</text>
+  <text x="400" y="68" text-anchor="middle" font-size="13" fill="#94a3b8">pluggable: any wallet, any protocol, any governance · drop-in compatible with AWS Bedrock AgentCore</text>
+
+  <!-- ===== Layer 1 ===== -->
+  <rect x="40" y="100" width="720" height="78" rx="12" fill="#1e293b" stroke="url(#L1)" stroke-width="2.5"/>
+  <text x="60" y="128" font-size="12" font-weight="700" fill="#a78bfa">LAYER 1</text>
+  <text x="400" y="135" text-anchor="middle" font-size="16" font-weight="700" fill="#e2e8f0">Strands Plugin (drop-in compatible with AgentCore Payments)</text>
+  <text x="400" y="159" text-anchor="middle" font-size="11" fill="#94a3b8">Python SDK · OpenAgentPayPlugin = 1-line replacement for AgentCorePaymentsPlugin · zero business-code change</text>
+
+  <!-- ===== Layer 2 ===== -->
+  <rect x="40" y="195" width="720" height="78" rx="12" fill="#1e293b" stroke="url(#L2)" stroke-width="2.5"/>
+  <text x="60" y="223" font-size="12" font-weight="700" fill="#7dd3fc">LAYER 2</text>
+  <text x="400" y="230" text-anchor="middle" font-size="16" font-weight="700" fill="#e2e8f0">Payment Orchestrator</text>
+  <text x="400" y="254" text-anchor="middle" font-size="11" fill="#94a3b8">PaymentManager · SessionManager (spend governor, TTL) · ConnectorRegistry · ProtocolRouter</text>
+
+  <!-- ===== Layer 3: Protocols + Connectors (split) ===== -->
+  <rect x="40" y="290" width="355" height="200" rx="12" fill="#1e293b" stroke="url(#L3)" stroke-width="2.5"/>
+  <text x="60" y="318" font-size="12" font-weight="700" fill="#86efac">LAYER 3 · Protocols (pluggable)</text>
+  
+
+  <!-- protocol items -->
+  <rect x="60" y="335" width="315" height="32" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="355" font-size="11" font-weight="700" fill="#86efac">x402 v1/v2  ✓</text>
+  <text x="368" y="355" text-anchor="end" font-size="10" fill="#94a3b8">EIP-712 + EIP-3009 (chain)</text>
+
+  <rect x="60" y="375" width="315" height="32" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="395" font-size="11" font-weight="700" fill="#86efac">OAP-CEX v0.1  ✓</text>
+  <text x="368" y="395" text-anchor="end" font-size="10" fill="#94a3b8">HMAC + CEX internal ledger</text>
+
+  <rect x="60" y="415" width="315" height="32" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="74" y="435" font-size="11" fill="#cbd5e1">MPP / AP2 / ACP</text>
+  <text x="368" y="435" text-anchor="end" font-size="10" fill="#64748b">future drafts (pluggable)</text>
+
+  <text x="218" y="475" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">ProtocolAdapter ABC: 3-method interface</text>
+
+  <!-- Connectors -->
+  <rect x="405" y="290" width="355" height="200" rx="12" fill="#1e293b" stroke="url(#L4)" stroke-width="2.5"/>
+  <text x="425" y="318" font-size="12" font-weight="700" fill="#fdba74">LAYER 4 · Wallet Connectors (pluggable)</text>
+  
+
+  <!-- connector items -->
+  <rect x="425" y="335" width="315" height="32" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="355" font-size="11" font-weight="700" fill="#fdba74">HashKey Chain  ✓ live</text>
+  <text x="733" y="355" text-anchor="end" font-size="10" fill="#94a3b8">x402 · EIP-712</text>
+
+  <rect x="425" y="375" width="315" height="32" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="395" font-size="11" font-weight="700" fill="#fdba74">Binance Pay  ✓</text>
+  <text x="733" y="395" text-anchor="end" font-size="10" fill="#94a3b8">OAP-CEX · HMAC-SHA512</text>
+
+  <rect x="425" y="415" width="315" height="32" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="439" y="435" font-size="11" fill="#cbd5e1">Coinbase CDP · Stripe Privy</text>
+  <text x="733" y="435" text-anchor="end" font-size="10" fill="#64748b">x402 (path-D, drop-in)</text>
+
+  <text x="582" y="475" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">+ MetaMask · WalletConnect · OKX · Bitget · Bybit · HashKey Pro (按需触发)</text>
+
+  <!-- ===== Layer 5 ===== -->
+  <rect x="40" y="510" width="720" height="78" rx="12" fill="#1e293b" stroke="url(#L5)" stroke-width="2.5"/>
+  <text x="60" y="538" font-size="12" font-weight="700" fill="#fda4af">LAYER 5</text>
+  <text x="400" y="545" text-anchor="middle" font-size="16" font-weight="700" fill="#e2e8f0">Self-Hosted Facilitator</text>
+  <text x="400" y="569" text-anchor="middle" font-size="11" fill="#94a3b8">CloudFront → API Gateway → Lambda · settles authorized payments via wallet provider · KMS-managed keys</text>
+
+  <!-- bottom: "any of these flows works with same business code" -->
+  <rect x="40" y="605" width="720" height="86" rx="12" fill="#0f172a" stroke="#22c55e" stroke-width="2"/>
+  <text x="400" y="630" text-anchor="middle" font-size="13" font-weight="700" fill="#86efac"> Core promise: 1 line of business code change to switch wallets</text>
+  <text x="400" y="652" text-anchor="middle" font-size="11" fill="#cbd5e1" font-family="ui-monospace,Menlo">payment_manager = PaymentManager(wallet_provider="hashkey-chain")    # → on-chain USDC</text>
+  <text x="400" y="670" text-anchor="middle" font-size="11" fill="#cbd5e1" font-family="ui-monospace,Menlo">payment_manager = PaymentManager(wallet_provider="binance-pay")     # → CEX-internal</text>
+  <text x="400" y="685" text-anchor="middle" font-size="11" fill="#cbd5e1" font-family="ui-monospace,Menlo">payment_manager = PaymentManager(wallet_provider="coinbase-cdp")    # → AWS native</text>
+</svg>

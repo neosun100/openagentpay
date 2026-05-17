@@ -100,6 +100,10 @@ OpenAgentPay 让你**保留 AgentCore 的 Runtime / Identity / Gateway / Observa
 
 这就是为什么 OpenAgentPay 既能跑通 HashKey Chain 链上结算（x402），也能跑通 Binance Pay CEX 内部结算（OAP-CEX）——**用同一套 PaymentManager**。
 
+<p align="center">
+  <img src="https://img.aws.xin/uPic/protocol-comparison.png" alt="x402 vs OAP-CEX Protocol Comparison" width="100%"/>
+</p>
+
 **协议规范全文**：[`packages/protocol-cex-pay/doc/SPEC.md`](./packages/protocol-cex-pay/doc/SPEC.md) （24 页 IETF-style draft，向后兼容 x402）。
 
 ---
@@ -132,24 +136,23 @@ OpenAgentPay 让你**保留 AgentCore 的 Runtime / Identity / Gateway / Observa
 
 ## 🏗️ 架构
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    OpenAgentPay Platform                        │
-├─────────────────────────────────────────────────────────────────┤
-│ Layer 1: Strands Plugin (drop-in compatible with AgentCore)    │
-├─────────────────────────────────────────────────────────────────┤
-│ Layer 2: Payment Orchestrator                                   │
-│   PaymentManager · SessionManager · ConnectorRegistry          │
-├──────────────────────────┬──────────────────────────────────────┤
-│ Layer 3: Protocols       │ Layer 4: Wallet Connectors           │
-│   x402 v1/v2 ✅           │   Coinbase CDP · Stripe Privy        │
-│   OAP-CEX v0.1 ✅         │   HashKey Chain ✅ (live)            │
-│   MPP / AP2 / ACP        │   Binance Pay ✅ (OAP-CEX)           │
-│                          │   OKX · Bitget · MetaMask · …        │
-├──────────────────────────┴──────────────────────────────────────┤
-│ Layer 5: Self-Hosted Facilitator (Express API → Lambda later)   │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Live deployment（部署架构）
+
+<p align="center">
+  <img src="https://img.aws.xin/uPic/architecture.png" alt="OpenAgentPay Live Architecture on AWS" width="100%"/>
+</p>
+
+> Browser → CloudFront → API Gateway HTTP API → Lambda → HashKey Chain Testnet
+>
+> 全链路真实运行，无 Lambda 公网入口（合规架构），私钥在 Secrets Manager（KMS-encrypted）。
+
+### OpenAgentPay 平台 5 层架构
+
+<p align="center">
+  <img src="https://img.aws.xin/uPic/platform-architecture.png" alt="OpenAgentPay Platform 5-Layer Architecture" width="100%"/>
+</p>
+
+> 协议层（x402 / OAP-CEX）和钱包连接器（HashKey Chain / Binance Pay / Coinbase CDP / ...）都是**可插拔**的。换钱包只需改一行 `walletProvider`。
 
 ---
 
