@@ -5,6 +5,10 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-MVP-orange)](#roadmap)
 [![Made for](https://img.shields.io/badge/Made_for-AWS_Bedrock_AgentCore-FF9900)](https://aws.amazon.com/bedrock/agentcore/)
+[![HashKey Chain](https://img.shields.io/badge/Live_on-HashKey_Chain_Testnet-purple)](https://testnet-explorer.hsk.xyz/address/0x0685C487Df4Cc0723Aa828C299686798294E9803)
+[![Tests](https://img.shields.io/badge/tests-58_passing-brightgreen)](#)
+
+> **🚀 Live Update (2026-05-17)**: OpenAgentPay 在 **HashKey Chain Testnet** 上端到端跑通了 EIP-3009 `transferWithAuthorization`。MockUSDC 合约 + 真实链上结算 [在 Blockscout 实时可查](https://testnet-explorer.hsk.xyz/tx/0xff8a175e3f4b41a30b67940a4b654d7791742d76421d53a33dd976e8a51ccbf5)。这是项目从"想法"变成"可演示事实"的关键里程碑。详见 [📖 HashKey Demo 文档](./docs/HASHKEY_DEMO.md) · [📋 战略文档](./docs/STRATEGY.md)。
 
 ---
 
