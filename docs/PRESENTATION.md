@@ -58,14 +58,14 @@
 > "这套架构对 HashKey 客户的 5 层价值：
 >
 > 1. **现在能跑通的**：mock USDC 在 HashKey Testnet 链上结算
-> 2. **6 个月内**：等 Circle 把官方 USDC 部到 HashKey Chain，换合约地址即可
+> 2. **下一步可演进的**：等 Circle 把官方 USDC 部到 HashKey Chain，换合约地址即可——分钟级改动
 > 3. **跟 HashKey 直接相关的**：HKDR 港币稳定币上线后自动支持，不需要改协议
 > 4. **WHSK 路径**：原生 HSK 也能 wrap 后做支付（适合大额场景）
-> 5. **HashKey Pro 路径**：v0.2 接 CEX-internal API（适合 KYC 合规场景）
+> 5. **HashKey Pro 路径**：接 CEX-internal API（适合 KYC 合规场景）
 >
 > 这就是给亚洲 FSI 客户的完整 narrative。"
 >
-> "下一步 Phase 2：接 Strands Agent 真实推理 + 加 Coinbase CDP/Stripe Privy 走 AgentCore Payments 原版作对照演示。"
+> "下一步：接 Strands Agent 真实推理 + 加 Coinbase CDP/Stripe Privy 走 AgentCore Payments 原版作对照演示——这两件事都是已知的工程量，按需求触发。"
 
 ---
 

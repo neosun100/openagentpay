@@ -189,9 +189,9 @@ Nonce 状态: used ✅
    Strands Agent 调付费工具，自动签 EIP-712 + 在 HashKey Chain 链上结算，
    整个流程跟 Coinbase CDP + Base Sepolia 完全一致。Blockscout 链接可查。"
 
-第 2 层 — 6 个月内可演进的
+第 2 层 — 等链上 USDC 上线即可演进的
   "等 Circle 把官方 USDC 部到 HashKey Chain，把合约地址换一下就是生产级。
-   你们已经在跟 Circle 谈了对吧？"
+   这个改动是分钟级的工作，因为协议层和合约接口都已经对齐 EIP-3009 标准。"
 
 第 3 层 — 跟你们直接相关的
   "你们正在做的 HKDR（港币稳定币）一旦上线，
@@ -234,20 +234,22 @@ Nonce 状态: used ✅
 
 ## 九、实施路线图（精确到 commit）
 
+> 注：Phase 命名是技术 milestone 标号，不是时间表。下面状态是 2026-05-17 截止的实际完成情况。
+
 | Phase | 任务 | 状态 | 关键产出 |
 |---|---|---|---|
 | W0 | 项目脚手架 | ✅ commit `afab429` | Apache 2.0 + monorepo |
 | W1 | Binance Pay e2e | ✅ commit `08aed9c` | 50 TS + 8 Python tests |
 | **HashKey** | **Mock USDC + EIP-3009** | ✅ **2026-05-17** | **链上 e2e 跑通** ⭐ |
-| Phase A | 战略固化 | 🚧 进行中 | STRATEGY.md（本文）+ HASHKEY_DEMO.md |
-| Phase B | core 接口对齐 AgentCore | ⏳ | `PaymentManager`/`PaymentConnector`/`PaymentInstrument`/`PaymentSession` 命名 |
-| Phase C | HashKey TS Connector | ⏳ | `packages/wallet-hashkey/` |
-| Phase D | Facilitator Lambda | ⏳ | CDK + us-west-2 部署 |
-| Phase E | DDB SessionManager | ⏳ | 替换 InMemory |
-| Phase F | API 后端 | ⏳ | `/api/wallet`, `/api/session`, `/api/pay` |
-| Phase G | 三 Tab Web UI | ⏳ | apps/demo (核心交付物) |
-| Phase H | 部署 + e2e | ⏳ | CloudFront + S3 + Lambda |
-| Phase I | 文档 + 视频 | ⏳ | README v2 + 5min demo + 中英博客 |
+| Phase A | 战略固化 | ✅ 完成 | STRATEGY.md（本文）+ HASHKEY_DEMO.md |
+| Phase B | core 接口对齐 AgentCore | ✅ 完成 | `PaymentManager`/`PaymentConnector`/`PaymentInstrument`/`PaymentSession` 命名 |
+| Phase C | HashKey TS Connector | ✅ 完成 | `packages/wallet-hashkey/` (23 tests) |
+| Phase D | Facilitator Lambda | ✅ 完成 | CDK + us-east-1 部署，Lambda Function URL |
+| Phase E | DDB SessionManager | ⏳ 按需 | 当前 InMemory 够用；需要多实例时再加 |
+| Phase F | API 后端 | ✅ 完成 | `/api/wallet`, `/api/session`, `/api/pay`, `/api/health` |
+| Phase G | 三 Tab Web UI | ✅ 完成 | apps/demo-web 三 Tab |
+| Phase H | 部署 + e2e | ✅ 完成 | CloudFront + S3 + Lambda live: https://d1p7yxa99nxaye.cloudfront.net |
+| Phase I | 文档 + 视频 | 🚧 部分完成 | README v2 ✅ + STRATEGY/QUICKSTART/PRESENTATION ✅ + 5min demo 视频 ⏳ + 中英博客 ⏳ |
 
 ---
 

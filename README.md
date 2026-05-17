@@ -189,6 +189,8 @@ python3 scripts/hashkey/transfer-with-auth.py   # Python ref impl
 
 ## 🗺️ Roadmap
 
+> 这个 roadmap **不写时间**——OpenAgentPay 的核心抽象（`WalletConnector` + `ProtocolAdapter`）已经验证正确，剩下的扩展全是按通用接口的机械工作，**接入一个新钱包通常只需要 1-2 天**。具体节奏跟随生态进展和合作伙伴需求。
+
 ### ✅ Phase 1 · MVP demo（已完成 2026-05-17）
 - [x] 项目脚手架 + Apache 2.0
 - [x] WalletConnector + ProtocolAdapter 接口定义
@@ -197,26 +199,42 @@ python3 scripts/hashkey/transfer-with-auth.py   # Python ref impl
 - [x] **PaymentManager** 顶层抽象（对齐 AgentCore Payments）
 - [x] **MockUSDC + EIP-3009** 部署到 HashKey Chain Testnet
 - [x] **HashKey Chain Connector**（x402 路径，TypeScript）
-- [x] Python 参考实现 + TypeScript 实现，**两份独立代码产生相同链上效果**
+- [x] Python 参考实现 + TypeScript 实现——**两份独立代码产生相同链上效果**
 - [x] Express API server + Vite React 三 Tab UI
-- [x] **端到端 demo 跑通**（http://localhost:5173）
+- [x] 端到端 demo 跑通（local + AWS 生产）
 
-### 🚧 Phase 2 · 部署 + Strands Plugin（进行中）
-- [ ] CDK 部署：Lambda Function URL + CloudFront + DynamoDB
-- [ ] DynamoDB SessionManager 替换 InMemory
-- [ ] Python Strands Plugin（OpenAgentPayPlugin = drop-in 替换 AgentCorePaymentsPlugin）
-- [ ] 真 Strands Agent 集成 AI Agent Tab
+### ✅ Phase 2 · AWS 生产部署（已完成 2026-05-17）
+- [x] CDK Stack：Lambda Function URL + CloudFront + S3 + Secrets Manager (KMS)
+- [x] 浏览器 → CloudFront → Lambda → Secrets Manager → HashKey Chain 全链路真实运行
+- [x] **Live URL**: https://d1p7yxa99nxaye.cloudfront.net
+- [x] AWS Lambda 上链 verified ([tx 0xd18cb0f1...](https://testnet-explorer.hsk.xyz/tx/0xd18cb0f19359bdaae17aa89a0e14c47ccb7793579b9a09ac0423eefb1390a06a))
 
-### 🌱 Phase 3 · 多钱包扩展（第 2-3 月）
-- HashKey Pro Sandbox API（CEX-internal 路径）
-- OKX Pay · Bitget Wallet · Bybit Pay
-- MetaMask Snap · WalletConnect v2
-- Coinbase CDP · Stripe Privy（路径 D 另一半）
+### 🌱 Phase 3 · 通用钱包接入（持续演进）
 
-### 🌳 Phase 4 · 标准化（第 6-12 月）
-- IETF/W3C OAP-CEX 提案
-- HKDR 稳定币原生支持（HashKey 港币稳定币上线后）
-- 商业版 SaaS
+**核心理念**：任何钱包，只要满足 `WalletConnector` 接口的 5 个方法，都能即插即用接入。我们提供：
+- 📐 **接入指南** + 模板 fork（参考 `packages/wallet-hashkey/`）
+- ✅ **5 个 conformance test**（全过即合规）
+- 📦 **自动发布到 npm**（merge 即 publish）
+
+**正在/即将接入的钱包**（顺序按 demand 触发，非时间排序）：
+
+| 类别 | 钱包 | 协议路径 | 状态 |
+|---|---|---|---|
+| **EVM 自托管（x402 路径）** | HashKey Chain · MetaMask Snap · WalletConnect v2 · Rainbow · Phantom (EVM) | x402 v1 | HashKey ✅ done · 其余正在接 |
+| **AWS 原版兼容** | Coinbase CDP · Stripe Privy | x402 v1 | 路径 D 另一半，可即插即用 |
+| **CEX-API（OAP-CEX 路径）** | Binance Pay ✅ · OKX Pay · Bitget Wallet · Bybit Pay · HashKey Pro Sandbox | OAP-CEX v0.1 | Binance done · 其余按需触发 |
+| **传统支付** | Stripe（信用卡）· 支付宝 · 微信支付 | 待定 protocol | 看市场需求 |
+
+**目标**：覆盖全部主流钱包/支付方式。**只要客户提需求 + 钱包方有 API，1-2 天内就能 ship 一个新 connector**。
+
+### 🌳 Phase 4 · 标准化与生态（持续推进）
+
+- **协议提案**：把 OAP-CEX v0.1 推进 IETF/W3C
+- **AgentCore 原生集成**：与 AWS Bedrock AgentCore Payments 团队对接，让 OpenAgentPay 成为官方扩展层
+- **稳定币原生支持**：USDC ✅ · HKDR（HashKey 港币）· FDUSD · USDT · WHSK · 任何 EIP-3009 兼容 ERC-20 都自动支持
+- **商业版 SaaS**：Self-hosted facilitator 之上的托管运营
+
+**节奏**：跟随生态成熟度——上述大多数项目都不需要"几个月"，而是"看到信号就行动"。OpenAgentPay 的协议层已经为这些场景留好了 plug-in 点。
 
 ---
 
