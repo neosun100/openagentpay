@@ -137,6 +137,30 @@ export class DemoStack extends cdk.Stack {
     });
 
     // -------------------------------------------------------------------------
+    //  1.6. DynamoDB — payment session persistence (Layer 2 of 7-Layer Guardrail)
+    // -------------------------------------------------------------------------
+    //
+    //  Solves the "Session not found" multi-Lambda warm-instance bug:
+    //  any Lambda instance can read/write the same session via DynamoDB.
+    //
+    //  Schema:
+    //    PK (id)   S   = SessionId
+    //  Single-table — no GSIs needed; sessions are always looked up by id.
+    //
+    //  TTL on `ttlEpoch` attribute auto-evicts sessions 24h after expiry.
+    //
+    const sessionsTable = new dynamodb.Table(this, "SessionsTable", {
+      tableName: "openagentpay-sessions",
+      partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // demo only
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
+      timeToLiveAttribute: "ttlEpoch",
+    });
+
+    // -------------------------------------------------------------------------
     //  2. Lambda Function URL — runs demo-api
     // -------------------------------------------------------------------------
     const apiFn = new NodejsFunction(this, "DemoApiFn", {
@@ -155,6 +179,8 @@ export class DemoStack extends cdk.Stack {
         ...(props.hashkeyRpcUrl ? { HASHKEY_RPC_URL: props.hashkeyRpcUrl } : {}),
         // DynamoDB audit table (Layer 7 persistence)
         AUDIT_TABLE_NAME: auditTable.tableName,
+        // DynamoDB sessions table (Layer 2 persistence — solves multi-Lambda warm-instance session loss)
+        SESSIONS_TABLE_NAME: sessionsTable.tableName,
         // Coinbase CDP — only set if enabled
         ...(cdpEnabled
           ? {
@@ -186,6 +212,7 @@ export class DemoStack extends cdk.Stack {
 
     // Grant Lambda full read/write access to the audit table
     auditTable.grantReadWriteData(apiFn);
+    sessionsTable.grantReadWriteData(apiFn);
 
     // -------------------------------------------------------------------------
     //  2. API Gateway HTTP API — public-facing entrypoint to Lambda.
@@ -313,6 +340,7 @@ export class DemoStack extends cdk.Stack {
     new cdk.CfnOutput(this, "DistributionId", { value: distribution.distributionId });
     new cdk.CfnOutput(this, "SecretArn", { value: pkSecret.secretArn });
     new cdk.CfnOutput(this, "AuditTableName", { value: auditTable.tableName });
+    new cdk.CfnOutput(this, "SessionsTableName", { value: sessionsTable.tableName });
     if (cdpApiKeySecretRes) {
       new cdk.CfnOutput(this, "CdpApiKeySecretArn", {
         value: cdpApiKeySecretRes.secretArn,

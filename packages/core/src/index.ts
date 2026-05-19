@@ -11,4 +11,5 @@
 
 export * from "./types.js";
 export * from "./session/manager.js";
+export * from "./session/dynamodb-manager.js";
 export * from "./manager/payment-manager.js";

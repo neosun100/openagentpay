@@ -20,6 +20,96 @@ working snapshot.
 - DynamoDB AuditSink (persistent audit log)
 - Real LangChain agent demo with OpenAI / Anthropic API key
 
+## [0.7.0] · 2026-05-20 — **Layer 2 Persistence: DynamoDB SessionManager**
+
+> **Headline**: Sessions now persist to DynamoDB. Solves the "Session not found"
+> bug from v0.4.2 where Lambda warm-instance affinity caused subsequent calls
+> to a different instance to lose access to the session.
+
+### Added — `@openagentpay/core` DynamoDBSessionManager
+
+- New `DynamoDBSessionManager` class implementing `SessionManager`
+- Optimistic concurrency: read-then-conditional-update with version field
+- Auto-retry on `ConditionalCheckFailedException` (default 3 attempts)
+- Strong-consistent reads (`ConsistentRead: true`)
+- TTL-based auto-eviction (24h after expiry)
+- Pluggable command factories — same pattern as DynamoDBAuditSink
+- 24 new unit tests (45 total in core package)
+
+### Added — CDK infrastructure
+
+- New table `openagentpay-sessions`:
+  - PK: id (S) — single-table design, no GSIs needed
+  - On-demand billing
+  - Point-in-time recovery enabled
+  - TTL on `ttlEpoch` attribute
+- Lambda IAM auto-grant: `grantReadWriteData(apiFn)`
+- Env var `SESSIONS_TABLE_NAME` set automatically
+
+### Added — demo-api integration
+
+- `apps/demo-api/src/context.ts` lazy-loads DynamoDBSessionManager when
+  `SESSIONS_TABLE_NAME` env var present (Lambda mode)
+- Falls back to InMemorySessionManager locally
+- Graceful degradation: SDK init failure → log + InMemory fallback
+
+### Bug fixed
+
+Multi-Lambda warm instance session loss:
+
+```
+Before v0.7.0:
+  POST /api/session            → Lambda A creates session in memory
+  POST /api/pay (hashkey)      → Lambda A handles, finds session ✅
+  POST /api/pay (coinbase-cdp) → Lambda B (different warm) → 404 ❌
+
+After v0.7.0:
+  All Lambda instances read/write the same DynamoDB session ✅
+```
+
+Verified: a single session ID handled 3 payments across 2 wallets:
+- hashkey-chain  tx 0x5f016f7dba1e07ee...
+- coinbase-cdp   tx 0x5ce737e8acf26799...
+- hashkey-chain  tx 0xc6b622b56bbd95ed...
+
+Final state: spentAtomic=3000, version=6 (3 reserves + 3 commits).
+
+### scripts/smoke-e2e.ts simplified
+
+Steps 6 + 7 now use the SAME session created in step 5. Previously workaround
+code created fresh sessions per payment.
+
+### 7-Layer Guardrail persistence status (post v0.7.0)
+
+| Layer | Component | Persisted |
+|---|---|---|
+| L2 **Session** | core/DynamoDBSessionManager | ✅ **NEW v0.7.0** |
+| L3 Policy | governance/PolicyEngine | ✅ stateless |
+| L4 On-chain | EIP-3009 | ✅ on-chain |
+| L5 Compliance | governance/ComplianceChecker | ✅ stateless |
+| L6 Identity | AWS Secrets Manager + KMS | ✅ |
+| L7 Audit | governance/DynamoDBAuditSink (v0.6.0) | ✅ |
+
+### Test results
+
+```
+@openagentpay/core              45 passed (was 21, +24 dynamodb-session)
+@openagentpay/governance        45 passed
+@openagentpay/protocol-cex-pay  18 passed
+@openagentpay/wallet-hashkey    23 passed
+@openagentpay/wallet-coinbase-cdp 11 passed
+@openagentpay/wallet-binance    20 passed
+@openagentpay/langchain-plugin  23 passed
+demo-api                        22 passed
+TypeScript subtotal            207 passed
+Python (strands-plugin)         23 passed
+─────────────────────────────────────
+Grand total                    230 passed
+```
+
+E2E smoke (12 steps) against production: 12/12 ✅
+
+
 ## [0.6.0] · 2026-05-20 — **Layer 7 Persistence: DynamoDB AuditSink**
 
 > **Headline**: Audit log now persists to DynamoDB in production. Every

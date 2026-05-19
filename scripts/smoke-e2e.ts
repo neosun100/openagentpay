@@ -167,19 +167,13 @@ async function main() {
   // ---- 6. Real on-chain payment via HashKey ----
   console.log("\n[6/8] Real on-chain payment — HashKey Chain");
 
-  // NOTE: each payment uses its OWN session because in production CloudFront
-  // may route subsequent calls to different Lambda warm instances, each with
-  // their own InMemorySessionManager. Production v0.5+ will move sessions to
-  // DynamoDB to fix this.
-  const hkSession = await fetchJson("POST", `${baseUrl}/api/session`, {
-    budgetUsd: 0.5,
-    expiryMinutes: 10,
-  });
+  // After v0.7 (DynamoDB SessionManager), the same session can be used across
+  // payments and across Lambda warm instances. We reuse `session` from step 5.
   const hkPayment = await step(
     "POST /api/pay (hashkey-chain, 0.001 USDC)",
     () =>
       fetchJson("POST", `${baseUrl}/api/pay`, {
-        sessionId: hkSession.sessionId,
+        sessionId: session.sessionId,
         amountUsdc: 0.001,
         walletProvider: "hashkey-chain",
       }),
@@ -194,17 +188,13 @@ async function main() {
     log("🔗", `   ${hkPayment.explorerUrl}`);
   }
 
-  // ---- 7. Real on-chain payment via Coinbase CDP ----
-  console.log("\n[7/8] Real on-chain payment — Coinbase CDP");
-  const cdpSession = await fetchJson("POST", `${baseUrl}/api/session`, {
-    budgetUsd: 0.5,
-    expiryMinutes: 10,
-  });
+  // ---- 7. Real on-chain payment via Coinbase CDP (same session, cross-wallet) ----
+  console.log("\n[7/8] Real on-chain payment — Coinbase CDP (same session)");
   const cdpPayment = await step(
-    "POST /api/pay (coinbase-cdp, 0.001 USDC)",
+    "POST /api/pay (coinbase-cdp, 0.001 USDC) — proves DDB session works",
     () =>
       fetchJson("POST", `${baseUrl}/api/pay`, {
-        sessionId: cdpSession.sessionId,
+        sessionId: session.sessionId,
         amountUsdc: 0.001,
         walletProvider: "coinbase-cdp",
       }),

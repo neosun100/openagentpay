@@ -22,6 +22,7 @@ import { join } from "node:path";
 import {
   InMemoryPaymentManager,
   InMemorySessionManager,
+  DynamoDBSessionManager,
   type SessionManager,
   type UserId,
   type WalletConnector,
@@ -270,7 +271,31 @@ async function buildCoinbaseCdpBundle(): Promise<ConnectorBundle | null> {
 async function _buildContext(): Promise<AppContext> {
   loadDotenvLocal(findRepoRoot());
 
-  const sessionManager = new InMemorySessionManager();
+  // Layer 2: SessionManager — DynamoDB in production (multi-Lambda safe), InMemory locally
+  let sessionManager: SessionManager;
+  const sessionsTableName = process.env["SESSIONS_TABLE_NAME"];
+  if (sessionsTableName) {
+    try {
+      const { DynamoDBClient } = await import("@aws-sdk/client-dynamodb");
+      const { DynamoDBDocumentClient } = await import("@aws-sdk/lib-dynamodb");
+      const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+      sessionManager = new DynamoDBSessionManager({
+        tableName: sessionsTableName,
+        client: docClient,
+      });
+      console.log(
+        `[session] DynamoDB persistence enabled (table=${sessionsTableName})`
+      );
+    } catch (err) {
+      console.warn(
+        "[session] DynamoDB SessionManager init failed, falling back to in-memory:",
+        err
+      );
+      sessionManager = new InMemorySessionManager();
+    }
+  } else {
+    sessionManager = new InMemorySessionManager();
+  }
   const connectors = new Map<WalletProviderId, ConnectorBundle>();
 
   // Build HashKey first (the default — preserves old behavior)
