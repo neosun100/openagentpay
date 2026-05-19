@@ -1,15 +1,17 @@
 /**
  * Application context — singleton wiring for the demo API.
  *
- * Two modes:
- *   1. Local dev: reads .env.local for HASHKEY_TESTNET_AGENT_PRIVATE_KEY (raw)
- *   2. Lambda:    reads HASHKEY_TESTNET_AGENT_PRIVATE_KEY_SECRET_ARN from env
- *                 and fetches the private key from AWS Secrets Manager
+ * Now supports BOTH connectors side-by-side (path D hybrid):
+ *   - HashKey Chain (self-custodial EVM, Asia, MockUSDC)
+ *   - Coinbase CDP V2 (managed EVM, NA, Circle USDC on Base Sepolia)
  *
- * Constructs:
- *   - HashKeyChainConnector (with private key)
- *   - InMemoryPaymentManager (registers connector)
- *   - Demo user id constant
+ * Both register into the same PaymentManager. Handlers route requests by
+ * the `walletProvider` query/body parameter from the UI dropdown.
+ *
+ * Two modes:
+ *   1. Local dev: reads .env.local
+ *   2. Lambda:    reads HASHKEY_TESTNET_AGENT_PRIVATE_KEY_SECRET_ARN
+ *                 (CDP creds via env vars from Lambda config)
  *
  * @license Apache-2.0
  */
@@ -22,13 +24,21 @@ import {
   InMemorySessionManager,
   type SessionManager,
   type UserId,
+  type WalletConnector,
+  type WalletProviderId,
 } from "@openagentpay/core";
 import {
   HashKeyChainConnector,
   HashKeyChainTokenClient,
-  MemoryInstrumentStore,
+  MemoryInstrumentStore as HashKeyMemoryInstrumentStore,
   hashkeyChainTestnet,
 } from "@openagentpay/wallet-hashkey";
+import {
+  CoinbaseCDPConnector,
+  MemoryInstrumentStore as CdpMemoryInstrumentStore,
+  BASE_SEPOLIA_CHAIN,
+  BASE_SEPOLIA_USDC_ADDRESS,
+} from "@openagentpay/wallet-coinbase-cdp";
 
 // ----------------------------------------------------------------------------
 //  .env.local loader (zero deps, local dev only)
@@ -43,7 +53,10 @@ function loadDotenvLocal(rootDir: string): void {
     const eq = line.indexOf("=");
     if (eq < 0) continue;
     const key = line.slice(0, eq).trim();
-    const val = line.slice(eq + 1).trim().replace(/^['"]|['"]$/g, "");
+    const val = line
+      .slice(eq + 1)
+      .trim()
+      .replace(/^['"]|['"]$/g, "");
     if (!process.env[key]) process.env[key] = val;
   }
 }
@@ -51,7 +64,10 @@ function loadDotenvLocal(rootDir: string): void {
 function findRepoRoot(): string {
   let dir = process.cwd();
   for (let i = 0; i < 6; i++) {
-    if (existsSync(join(dir, ".env.local")) || existsSync(join(dir, "pnpm-workspace.yaml"))) {
+    if (
+      existsSync(join(dir, ".env.local")) ||
+      existsSync(join(dir, "pnpm-workspace.yaml"))
+    ) {
       return dir;
     }
     const parent = join(dir, "..");
@@ -65,7 +81,6 @@ function findRepoRoot(): string {
 //  Secrets Manager loader (Lambda only)
 // ----------------------------------------------------------------------------
 async function loadFromSecretsManager(secretArn: string): Promise<string> {
-  // Lazy-import AWS SDK only in Lambda mode (avoid bundling in local dev)
   const { SecretsManagerClient, GetSecretValueCommand } = await import(
     "@aws-sdk/client-secrets-manager"
   );
@@ -75,56 +90,74 @@ async function loadFromSecretsManager(secretArn: string): Promise<string> {
   if (!resp.SecretString) {
     throw new Error(`Secret ${secretArn} has no SecretString`);
   }
-  // Secret stored as raw private key string (with or without 0x prefix), or
-  // as JSON {"privateKey": "0x..."} for forward-compat
   const raw = resp.SecretString.trim();
   if (raw.startsWith("{")) {
-    const obj = JSON.parse(raw) as { privateKey?: string; HASHKEY_TESTNET_AGENT_PRIVATE_KEY?: string };
-    return (obj.privateKey ?? obj.HASHKEY_TESTNET_AGENT_PRIVATE_KEY ?? raw).trim();
+    const obj = JSON.parse(raw) as {
+      privateKey?: string;
+      HASHKEY_TESTNET_AGENT_PRIVATE_KEY?: string;
+    };
+    return (
+      obj.privateKey ?? obj.HASHKEY_TESTNET_AGENT_PRIVATE_KEY ?? raw
+    ).trim();
   }
   return raw;
 }
 
 // ----------------------------------------------------------------------------
-//  Public context
+//  ConnectorBundle — per-wallet metadata bundled with the connector
 // ----------------------------------------------------------------------------
-
-export interface AppContext {
-  readonly manager: InMemoryPaymentManager;
-  readonly connector: HashKeyChainConnector;
-  readonly sessionManager: SessionManager;
-  readonly demoUserId: UserId;
+export interface ConnectorBundle {
+  readonly walletProvider: WalletProviderId;
+  readonly displayName: string;
+  readonly connector: WalletConnector;
+  /** Address explorer URL builder */
+  readonly addressExplorer: (addr: string) => string;
+  /** Tx explorer URL builder */
+  readonly txExplorer: (hash: string) => string;
+  readonly chainName: string;
+  readonly chainId: number;
   readonly tokenAddress: string;
   readonly tokenDecimals: number;
+  readonly tokenLabel: string; // "USDC (mock)" or "USDC (Circle official)"
+  readonly agentAddress: string;
+}
+
+// ----------------------------------------------------------------------------
+//  Public context
+// ----------------------------------------------------------------------------
+export interface AppContext {
+  readonly manager: InMemoryPaymentManager;
+  readonly sessionManager: SessionManager;
+  readonly demoUserId: UserId;
+  readonly connectors: Map<WalletProviderId, ConnectorBundle>;
+  /** Default wallet provider (HashKey for backwards compat with old UI) */
+  readonly defaultProvider: WalletProviderId;
 }
 
 let _ctx: AppContext | null = null;
 let _ctxPromise: Promise<AppContext> | null = null;
 
-async function _buildContext(): Promise<AppContext> {
-  // Prefer Secrets Manager if running in Lambda
+// ----------------------------------------------------------------------------
+//  HashKey bundle builder
+// ----------------------------------------------------------------------------
+async function buildHashKeyBundle(): Promise<ConnectorBundle | null> {
   let pk = process.env["HASHKEY_TESTNET_AGENT_PRIVATE_KEY"];
-  const secretArn = process.env["HASHKEY_TESTNET_AGENT_PRIVATE_KEY_SECRET_ARN"];
+  const secretArn =
+    process.env["HASHKEY_TESTNET_AGENT_PRIVATE_KEY_SECRET_ARN"];
   if (!pk && secretArn) {
     pk = await loadFromSecretsManager(secretArn);
   }
-  if (!pk) {
-    // Fall back to .env.local
-    loadDotenvLocal(findRepoRoot());
-    pk = process.env["HASHKEY_TESTNET_AGENT_PRIVATE_KEY"];
-  }
-  if (!pk) {
-    throw new Error(
-      "HASHKEY_TESTNET_AGENT_PRIVATE_KEY not found in env, secrets, or .env.local"
-    );
-  }
-  if (!pk.startsWith("0x")) pk = "0x" + pk;
+  if (!pk) return null; // graceful skip if not configured
 
   const tokenAddress = process.env["HASHKEY_USDC_ADDRESS"];
-  if (!tokenAddress) throw new Error("HASHKEY_USDC_ADDRESS missing");
+  if (!tokenAddress) {
+    console.warn("HashKey skipped: HASHKEY_USDC_ADDRESS missing");
+    return null;
+  }
+  if (!pk.startsWith("0x")) pk = "0x" + pk;
   const rpcUrl = process.env["HASHKEY_RPC_URL"];
 
-  const store = new MemoryInstrumentStore();
+  const store = new HashKeyMemoryInstrumentStore();
   const tokenClient = new HashKeyChainTokenClient({
     tokenAddress: tokenAddress as `0x${string}`,
     chain: hashkeyChainTestnet,
@@ -138,28 +171,142 @@ async function _buildContext(): Promise<AppContext> {
     ...(rpcUrl !== undefined ? { rpcUrl } : {}),
   });
 
-  const sessionManager = new InMemorySessionManager();
-  const manager = new InMemoryPaymentManager({
-    sessionManager,
-    resolveInstrument: async (id) => store.getById(id),
-  });
-  manager.registerConnector(connector);
-
+  const explorer = hashkeyChainTestnet.blockExplorers?.default?.url ?? "";
   return {
-    manager,
+    walletProvider: connector.getCapabilities().walletProvider,
+    displayName: connector.getCapabilities().displayName,
     connector,
-    sessionManager,
-    demoUserId: "demo-user" as UserId,
+    addressExplorer: (addr) => `${explorer}/address/${addr}`,
+    txExplorer: (hash) => `${explorer}/tx/${hash}`,
+    chainName: hashkeyChainTestnet.name,
+    chainId: hashkeyChainTestnet.id,
     tokenAddress,
     tokenDecimals: 6,
+    tokenLabel: "MockUSDC (HashKey Chain)",
+    agentAddress: connector.agentAddress,
   };
 }
 
-/**
- * Synchronous accessor (works after first async warmup).
- * In Lambda, the first invocation will take an extra ~200ms to fetch from
- * Secrets Manager; subsequent invocations are warm.
- */
+// ----------------------------------------------------------------------------
+//  Coinbase CDP bundle builder
+// ----------------------------------------------------------------------------
+async function buildCoinbaseCdpBundle(): Promise<ConnectorBundle | null> {
+  const apiKeyId = process.env["COINBASE_CDP_API_KEY_ID"];
+  let apiKeySecret = process.env["COINBASE_CDP_API_KEY_SECRET"];
+  let walletSecret = process.env["COINBASE_CDP_WALLET_SECRET"];
+
+  // Lambda mode: load secrets from Secrets Manager via ARN
+  const apiKeyArn = process.env["COINBASE_CDP_API_KEY_SECRET_ARN"];
+  const walletArn = process.env["COINBASE_CDP_WALLET_SECRET_ARN"];
+  if (!apiKeySecret && apiKeyArn) {
+    apiKeySecret = await loadFromSecretsManager(apiKeyArn);
+  }
+  if (!walletSecret && walletArn) {
+    walletSecret = await loadFromSecretsManager(walletArn);
+  }
+
+  const agentAddress =
+    process.env["COINBASE_CDP_AGENT_ADDRESS"] ??
+    "0x851C03756D5e9e057cb518C1B3cd47f628a0Dca7";
+  const recipientAddress = process.env["COINBASE_CDP_RECIPIENT_ADDRESS"];
+
+  if (!apiKeyId || !apiKeySecret || !walletSecret) {
+    return null; // CDP not configured — skip silently
+  }
+
+  const store = new CdpMemoryInstrumentStore();
+  const connector = new CoinbaseCDPConnector({
+    apiKeyId,
+    apiKeySecret,
+    walletSecret,
+    agentAddress: agentAddress as `0x${string}`,
+    ...(recipientAddress
+      ? { recipientAddress: recipientAddress as `0x${string}` }
+      : {}),
+    instrumentStore: store,
+  });
+
+  const explorer = BASE_SEPOLIA_CHAIN.blockExplorers?.default?.url ?? "";
+  return {
+    walletProvider: connector.getCapabilities().walletProvider,
+    displayName: connector.getCapabilities().displayName,
+    connector,
+    addressExplorer: (addr) => `${explorer}/address/${addr}`,
+    txExplorer: (hash) => `${explorer}/tx/${hash}`,
+    chainName: BASE_SEPOLIA_CHAIN.name,
+    chainId: BASE_SEPOLIA_CHAIN.id,
+    tokenAddress: BASE_SEPOLIA_USDC_ADDRESS,
+    tokenDecimals: 6,
+    tokenLabel: "USDC (Circle official)",
+    agentAddress: connector.agentAddress,
+  };
+}
+
+// ----------------------------------------------------------------------------
+//  Context builder
+// ----------------------------------------------------------------------------
+async function _buildContext(): Promise<AppContext> {
+  loadDotenvLocal(findRepoRoot());
+
+  const sessionManager = new InMemorySessionManager();
+  const connectors = new Map<WalletProviderId, ConnectorBundle>();
+
+  // Build HashKey first (the default — preserves old behavior)
+  const hashKey = await buildHashKeyBundle();
+  if (hashKey) {
+    connectors.set(hashKey.walletProvider, hashKey);
+  }
+
+  // Build Coinbase CDP (path D other half)
+  const cdp = await buildCoinbaseCdpBundle();
+  if (cdp) {
+    connectors.set(cdp.walletProvider, cdp);
+  }
+
+  if (connectors.size === 0) {
+    throw new Error(
+      "No wallet connectors configured — set HASHKEY_* or COINBASE_CDP_* env vars"
+    );
+  }
+
+  // Build manager and register all connectors with a unified resolveInstrument
+  const manager = new InMemoryPaymentManager({
+    sessionManager,
+    resolveInstrument: async (id) => {
+      // Try each connector's store
+      for (const bundle of connectors.values()) {
+        const c = bundle.connector as any;
+        if (c.config?.instrumentStore?.getById) {
+          const inst = await c.config.instrumentStore.getById(id);
+          if (inst) return inst;
+        }
+        // HashKey uses a private `store` field via constructor — fallback via type assertion
+        if (c.store?.getById) {
+          const inst = await c.store.getById(id);
+          if (inst) return inst;
+        }
+      }
+      return undefined;
+    },
+  });
+  for (const bundle of connectors.values()) {
+    manager.registerConnector(bundle.connector);
+  }
+
+  // Default provider: HashKey if available (backward compat), else first
+  const defaultProvider = (hashKey?.walletProvider ??
+    [...connectors.keys()][0]) as WalletProviderId;
+
+  return {
+    manager,
+    sessionManager,
+    demoUserId: "demo-user" as UserId,
+    connectors,
+    defaultProvider,
+  };
+}
+
+/** Synchronous accessor (works after first async warmup). */
 export function context(): AppContext {
   if (_ctx) return _ctx;
   throw new Error(
@@ -176,6 +323,21 @@ export async function ensureContext(): Promise<AppContext> {
     return _ctx;
   })();
   return _ctxPromise;
+}
+
+/** Get bundle by walletProvider, falling back to default if not found. */
+export function getBundle(
+  ctx: AppContext,
+  walletProvider?: string
+): ConnectorBundle {
+  if (walletProvider) {
+    const b = ctx.connectors.get(walletProvider as WalletProviderId);
+    if (b) return b;
+    // unknown — fall back to default
+  }
+  const def = ctx.connectors.get(ctx.defaultProvider);
+  if (!def) throw new Error("No connector available");
+  return def;
 }
 
 /** Reset for tests. */

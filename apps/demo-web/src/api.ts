@@ -10,12 +10,29 @@ export interface WalletStatus {
   chainId: number;
   token: string;
   tokenAddress: string;
+  tokenLabel?: string;
   tokenExplorer: string;
   decimals: number;
   balance: number;
   balanceRaw: string;
   instrumentId: string;
   walletProvider: string;
+  displayName?: string;
+}
+
+export interface WalletEntry {
+  walletProvider: string;
+  displayName: string;
+  chainName: string;
+  chainId: number;
+  tokenLabel: string;
+  tokenAddress: string;
+  agentAddress: string;
+}
+
+export interface WalletList {
+  wallets: WalletEntry[];
+  defaultProvider: string;
 }
 
 export interface CreateSessionResp {
@@ -45,6 +62,7 @@ export interface PayResp {
   payer: string;
   recipient: string;
   network: string;
+  walletProvider?: string;
   errorCode?: string;
   errorMessage?: string;
   paymentPayload: {
@@ -172,10 +190,23 @@ function summarizeResp(r: unknown): string {
 
 export const api = {
   health: () => fetchJson<{ ok: boolean }>("GET", "/api/health"),
-  wallet: () => fetchJson<WalletStatus>("GET", "/api/wallet"),
+  wallets: () => fetchJson<WalletList>("GET", "/api/wallets"),
+  wallet: (walletProvider?: string) =>
+    fetchJson<WalletStatus>(
+      "GET",
+      walletProvider
+        ? `/api/wallet?walletProvider=${encodeURIComponent(walletProvider)}`
+        : "/api/wallet"
+    ),
   createSession: (budgetUsd: number, expiryMinutes: number) =>
     fetchJson<CreateSessionResp>("POST", "/api/session", { budgetUsd, expiryMinutes }),
   getSession: (id: string) => fetchJson<SessionStatus>("GET", `/api/session/${id}`),
-  pay: (sessionId: string, amountUsdc: number) =>
-    fetchJson<PayResp>("POST", "/api/pay", { sessionId, amountUsdc }),
+  pay: (sessionId: string, amountUsdc: number, walletProvider?: string) =>
+    fetchJson<PayResp>(
+      "POST",
+      "/api/pay",
+      walletProvider
+        ? { sessionId, amountUsdc, walletProvider }
+        : { sessionId, amountUsdc }
+    ),
 };

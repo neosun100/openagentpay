@@ -29,6 +29,7 @@ import {
   createSession,
   getSession,
   getWalletStatus,
+  listWallets,
   processPayment,
   type ApiError,
 } from "./handlers.js";
@@ -89,9 +90,16 @@ export async function handler(
       return jsonResponse({ ok: true, ts: new Date().toISOString() });
     }
 
-    // GET /api/wallet
+    // GET /api/wallets — list available wallet providers
+    if (method === "GET" && path === "/api/wallets") {
+      const data = await listWallets();
+      return jsonResponse(data);
+    }
+
+    // GET /api/wallet?walletProvider=...
     if (method === "GET" && path === "/api/wallet") {
-      const data = await getWalletStatus();
+      const wp = event.queryStringParameters?.["walletProvider"];
+      const data = await getWalletStatus(wp);
       return jsonResponse(data);
     }
 

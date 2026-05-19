@@ -1,22 +1,72 @@
 import { useEffect, useState } from "react";
-import { api, type WalletStatus } from "./api.js";
+import { api, type WalletStatus, type WalletEntry } from "./api.js";
 
 export interface SidebarProps {
   walletProvider: string;
-  chain: string;
   onWalletChange: (v: string) => void;
 }
 
-export function Sidebar({ walletProvider, chain, onWalletChange }: SidebarProps) {
+export function Sidebar({ walletProvider, onWalletChange }: SidebarProps) {
   const [wallet, setWallet] = useState<WalletStatus | null>(null);
+  const [walletList, setWalletList] = useState<WalletEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch list of available wallets on mount
   useEffect(() => {
     api
-      .wallet()
+      .wallets()
+      .then((resp) => setWalletList(resp.wallets))
+      .catch((e: Error) =>
+        console.warn("Failed to fetch wallet list:", e.message)
+      );
+  }, []);
+
+  // Re-fetch wallet status whenever provider changes
+  useEffect(() => {
+    setWallet(null);
+    setError(null);
+    api
+      .wallet(walletProvider)
       .then(setWallet)
       .catch((e: Error) => setError(e.message));
-  }, []);
+  }, [walletProvider]);
+
+  // Determine architecture flow text by provider
+  const flowText =
+    walletProvider === "coinbase-cdp"
+      ? `Browser
+   │
+   ▼
+Express /api/*
+   │
+   ▼
+PaymentManager
+   │
+   ▼
+CoinbaseCDPConnector
+   │
+   ▼  (CDP SDK)
+Coinbase TEE
+   │
+   ▼
+Base Sepolia
+(Chain ID 84532)`
+      : `Browser
+   │
+   ▼
+Express /api/*
+   │
+   ▼
+PaymentManager
+   │
+   ▼
+HashKeyChainConnector
+   │
+   ▼
+HashKey Chain Testnet
+(Chain ID 133)`;
+
+  const isCoinbase = walletProvider === "coinbase-cdp";
 
   return (
     <aside className="sidebar">
@@ -27,10 +77,18 @@ export function Sidebar({ walletProvider, chain, onWalletChange }: SidebarProps)
           onChange={(e) => onWalletChange(e.target.value)}
           style={{ width: "100%" }}
         >
-          <option value="hashkey-chain">HashKey Chain (Self-Custodial)</option>
-          <option value="coinbase-cdp" disabled>
-            Coinbase CDP (path D — coming)
-          </option>
+          {walletList.length > 0 ? (
+            walletList.map((w) => (
+              <option key={w.walletProvider} value={w.walletProvider}>
+                {w.displayName} · {w.chainName}
+              </option>
+            ))
+          ) : (
+            <>
+              <option value="hashkey-chain">HashKey Chain (Self-Custodial)</option>
+              <option value="coinbase-cdp">Coinbase CDP (Custodial)</option>
+            </>
+          )}
           <option value="stripe-privy" disabled>
             Stripe Privy (path D — coming)
           </option>
@@ -38,9 +96,17 @@ export function Sidebar({ walletProvider, chain, onWalletChange }: SidebarProps)
             Binance Pay (OAP-CEX — v0.2)
           </option>
         </select>
-        <div style={{ fontSize: 11, color: "var(--fg-dim)", marginTop: 8, lineHeight: 1.5 }}>
-          OpenAgentPay 路径 D：当前 demo 走 HashKey 自托管 EVM 钱包；后续接通
-          AgentCore Payments 原版作 Coinbase/Stripe 的对照路径。
+        <div
+          style={{
+            fontSize: 11,
+            color: "var(--fg-dim)",
+            marginTop: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          OpenAgentPay 路径 D 混合：HashKey Chain（亚洲，MockUSDC）+ Coinbase CDP
+          （北美，Circle 官方 USDC on Base Sepolia）—— 共享同一个
+          WalletConnector 接口，Framework-agnostic 切换。
         </div>
       </div>
 
@@ -48,34 +114,48 @@ export function Sidebar({ walletProvider, chain, onWalletChange }: SidebarProps)
       <div className="card">
         <div className="row">
           <span className="label">Chain</span>
-          <span className="value">{chain}</span>
+          <span className="value">{wallet?.network ?? "—"}</span>
         </div>
         <div className="row">
           <span className="label">Chain ID</span>
-          <span className="value">133</span>
+          <span className="value">{wallet?.chainId ?? "—"}</span>
         </div>
         <div className="row">
           <span className="label">Token</span>
-          <span className="value">{wallet?.token ?? "USDC"}</span>
+          <span className="value">
+            {wallet?.tokenLabel ?? wallet?.token ?? "USDC"}
+          </span>
         </div>
       </div>
 
       <h3>Wallet Status</h3>
       <div className="card">
-        {error && <div style={{ color: "var(--red)", fontSize: 12 }}>❌ {error}</div>}
-        {!wallet && !error && <div style={{ color: "var(--fg-dim)", fontSize: 12 }}>Loading...</div>}
+        {error && (
+          <div style={{ color: "var(--red)", fontSize: 12 }}>❌ {error}</div>
+        )}
+        {!wallet && !error && (
+          <div style={{ color: "var(--fg-dim)", fontSize: 12 }}>Loading...</div>
+        )}
         {wallet && (
           <>
             <div className="row">
               <span className="label">Address</span>
-              <a className="value" href={wallet.addressExplorer} target="_blank" rel="noreferrer">
+              <a
+                className="value"
+                href={wallet.addressExplorer}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
               </a>
             </div>
             <div className="row">
               <span className="label">Balance</span>
-              <span className="value" style={{ color: "var(--green)", fontWeight: 600 }}>
-                {wallet.balance.toFixed(2)} {wallet.token}
+              <span
+                className="value"
+                style={{ color: "var(--green)", fontWeight: 600 }}
+              >
+                {wallet.balance.toFixed(isCoinbase ? 4 : 2)} {wallet.token}
               </span>
             </div>
             <div className="row">
@@ -103,36 +183,61 @@ export function Sidebar({ walletProvider, chain, onWalletChange }: SidebarProps)
       <h3>Architecture</h3>
       <div className="card">
         <pre style={{ fontSize: 10, padding: 8, overflow: "hidden" }}>
-{`Browser
-   │
-   ▼
-Express /api/*
-   │
-   ▼
-PaymentManager
-   │
-   ▼
-HashKeyChainConnector
-   │
-   ▼
-HashKey Chain Testnet
-(Chain ID 133)`}
+          {flowText}
         </pre>
       </div>
 
       <h3>Reference</h3>
       <div className="card" style={{ fontSize: 11 }}>
-        <a href="https://testnet-explorer.hsk.xyz" target="_blank" rel="noreferrer">
-          Blockscout Explorer
-        </a>
-        <br />
-        <a href="https://docs.hsk.xyz" target="_blank" rel="noreferrer">
-          HashKey Chain Docs
-        </a>
-        <br />
-        <a href="https://github.com/coinbase/x402" target="_blank" rel="noreferrer">
-          x402 Protocol
-        </a>
+        {isCoinbase ? (
+          <>
+            <a
+              href="https://sepolia.basescan.org"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Basescan Sepolia
+            </a>
+            <br />
+            <a
+              href="https://docs.cdp.coinbase.com"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Coinbase CDP Docs
+            </a>
+            <br />
+            <a
+              href="https://www.circle.com/usdc"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Circle USDC
+            </a>
+          </>
+        ) : (
+          <>
+            <a
+              href="https://testnet-explorer.hsk.xyz"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Blockscout Explorer
+            </a>
+            <br />
+            <a href="https://docs.hsk.xyz" target="_blank" rel="noreferrer">
+              HashKey Chain Docs
+            </a>
+            <br />
+            <a
+              href="https://github.com/coinbase/x402"
+              target="_blank"
+              rel="noreferrer"
+            >
+              x402 Protocol
+            </a>
+          </>
+        )}
       </div>
     </aside>
   );

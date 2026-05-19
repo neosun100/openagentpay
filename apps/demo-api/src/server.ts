@@ -18,6 +18,7 @@ import {
   createSession,
   getSession,
   getWalletStatus,
+  listWallets,
   processPayment,
   type ApiError,
 } from "./handlers.js";
@@ -56,11 +57,24 @@ app.get("/api/health", (_req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------------------------
-//  GET /api/wallet
+//  GET /api/wallets — list available wallet providers
 // ----------------------------------------------------------------------------
-app.get("/api/wallet", async (_req: Request, res: Response) => {
+app.get("/api/wallets", async (_req: Request, res: Response) => {
   try {
-    const data = await getWalletStatus();
+    const data = await listWallets();
+    res.json(data);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// ----------------------------------------------------------------------------
+//  GET /api/wallet?walletProvider=...
+// ----------------------------------------------------------------------------
+app.get("/api/wallet", async (req: Request, res: Response) => {
+  try {
+    const wp = req.query["walletProvider"] as string | undefined;
+    const data = await getWalletStatus(wp);
     res.json(data);
   } catch (err) {
     handleError(res, err);
@@ -128,19 +142,25 @@ ensureContext()
     app.listen(PORT, () => {
       console.log("");
       console.log(color("════════════════════════════════════════════════════════════════", 36));
-      console.log(color("  🌐 OpenAgentPay × HashKey Chain — Demo API", 36));
+      console.log(color("  🌐 OpenAgentPay — Demo API (Path D Hybrid)", 36));
       console.log(color("════════════════════════════════════════════════════════════════", 36));
       console.log(`  Listening on:    ${color(`http://localhost:${PORT}`, 36)}`);
-      console.log(`  Agent address:   ${color(ctx.connector.agentAddress, 36)}`);
-      console.log(`  Token address:   ${color(ctx.tokenAddress, 36)}`);
-      console.log(`  Network:         HashKey Chain Testnet (chainId=133)`);
+      console.log(`  Default wallet:  ${color(ctx.defaultProvider, 36)}`);
+      console.log(`  Connectors loaded:`);
+      for (const b of ctx.connectors.values()) {
+        console.log(
+          `    - ${color(b.walletProvider, 36)}  ${b.displayName}  on ${b.chainName}  (${b.tokenLabel})`
+        );
+        console.log(`      agent: ${b.agentAddress}`);
+      }
       console.log("");
       console.log(`  Endpoints:`);
       console.log(`    GET  /api/health`);
-      console.log(`    GET  /api/wallet`);
+      console.log(`    GET  /api/wallets                                         (list providers)`);
+      console.log(`    GET  /api/wallet?walletProvider=...                       (status)`);
       console.log(`    POST /api/session   { budgetUsd, expiryMinutes }`);
       console.log(`    GET  /api/session/:id`);
-      console.log(`    POST /api/pay       { sessionId, amountUsdc, recipient? }`);
+      console.log(`    POST /api/pay       { sessionId, amountUsdc, recipient?, walletProvider? }`);
       console.log("");
     });
   })

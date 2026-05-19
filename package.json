@@ -57,5 +57,9 @@
     "agent-payments",
     "open-source",
     "aws"
-  ]
+  ],
+  "dependencies": {
+    "@coinbase/cdp-sdk": "^1.49.2",
+    "@openagentpay/wallet-coinbase-cdp": "workspace:*"
+  }
 }

@@ -6,22 +6,19 @@
 [![Status](https://img.shields.io/badge/status-Live_on_AWS-brightgreen)](https://d1p7yxa99nxaye.cloudfront.net)
 [![Made for](https://img.shields.io/badge/Made_for-AWS_Bedrock_AgentCore-FF9900)](https://aws.amazon.com/bedrock/agentcore/)
 [![HashKey Chain](https://img.shields.io/badge/Live_on-HashKey_Chain_Testnet-purple)](https://testnet-explorer.hsk.xyz/address/0x0685C487Df4Cc0723Aa828C299686798294E9803)
-[![Tests](https://img.shields.io/badge/tests-82_passing-brightgreen)](#)
+[![Coinbase CDP](https://img.shields.io/badge/Live_on-Coinbase_CDP_+_Base_Sepolia-blue)](https://sepolia.basescan.org/address/0x851C03756D5e9e057cb518C1B3cd47f628a0Dca7)
+[![Tests](https://img.shields.io/badge/tests-93_passing-brightgreen)](#)
 
 > **🌐 Live demo**: https://d1p7yxa99nxaye.cloudfront.net （已部署到 AWS us-east-1，CloudFront + Lambda + Secrets Manager）
 >
-> **🚀 Live update (2026-05-17)**: OpenAgentPay 端到端 demo 已经在 **HashKey Chain Testnet** 上跑通：
-> 浏览器 → CloudFront → AWS Lambda (us-east-1) → Secrets Manager 取私钥 → EIP-712 签名 →
-> HashKey Chain Testnet 上链 → 在 Blockscout immutable 可查。
+> **🚀 Path D Hybrid 完成 (2026-05-19)**: OpenAgentPay 现在**同时**支持两个生产级钱包连接器：
+> - 🇭🇰 **HashKey Chain** (亚洲, MockUSDC, 自托管 EVM)
+> - 🇺🇸 **Coinbase CDP** (北美, Circle 官方 USDC, 托管 Base Sepolia)
 >
-> **协议层与 AWS AgentCore Payments / Coinbase CDP / Base Sepolia 路径完全对等**
-> ——业务代码层面只换一行 `walletProvider`。
->
-> 详见 [📋 战略文档](./docs/STRATEGY.md) ·
-> [⚡ Quickstart](./docs/QUICKSTART.md) ·
-> [🔬 HashKey 链上 demo 复现指南](./docs/HASHKEY_DEMO.md) ·
-> [🎤 演讲材料](./docs/PRESENTATION.md) ·
-> [📚 参考代码 vendor 计划](./docs/REFERENCES.md)。
+> 共享同一个 `WalletConnector` 接口，UI 一键切换，业务代码 0 改动。
+> Framework-agnostic 抽象证明完成。详见 [📋 CHANGELOG](./CHANGELOG.md) ·
+> [🔬 HashKey demo](./docs/HASHKEY_DEMO.md) ·
+> [⚡ Quickstart](./docs/QUICKSTART.md)。
 
 ---
 
@@ -161,24 +158,29 @@ OpenAgentPay 让你**保留 AgentCore 的 Runtime / Identity / Gateway / Observa
 ```
 openagentpay/
 ├── packages/
-│   ├── core/                  # PaymentManager + types + SessionManager
-│   ├── wallet-binance/        # Binance Pay Connector (OAP-CEX)
-│   ├── wallet-hashkey/        # HashKey Chain Connector (x402, EVM) ⭐
-│   ├── protocol-cex-pay/      # Custom CEX Pay Protocol Adapter
-│   ├── strands-plugin/        # Strands Plugin (Python)
-│   ├── cdk-deploy/            # AWS CDK Infrastructure
-│   └── python-sdk/            # Python SDK
+│   ├── core/                       # PaymentManager + types + SessionManager
+│   ├── wallet-binance/             # Binance Pay Connector (OAP-CEX)
+│   ├── wallet-hashkey/             # HashKey Chain Connector (x402, EVM) ⭐
+│   ├── wallet-coinbase-cdp/        # Coinbase CDP Connector (x402, Base Sepolia) ⭐ NEW
+│   ├── protocol-cex-pay/           # OAP-CEX Protocol Adapter (24-page IETF-style spec)
+│   ├── strands-plugin/             # Strands Plugin (Python, planned)
+│   ├── cdk-deploy/                 # AWS CDK Infrastructure
+│   └── python-sdk/                 # Python SDK
 ├── apps/
-│   ├── demo-api/              # Express server (→ API Gateway → Lambda)
-│   └── demo-web/              # Vite + React three-tab UI
+│   ├── demo-api/                   # Express server (→ API Gateway → Lambda)
+│   │                               # ↳ Path D Hybrid: routes by walletProvider param
+│   └── demo-web/                   # Vite + React three-tab UI
+│                                   # ↳ Capability bar with live + roadmap chips
 ├── scripts/
-│   ├── binance-smoke.ts       # Binance Pay sandbox e2e
-│   ├── hashkey-smoke.ts       # HashKey Chain Testnet e2e (TS)
-│   └── hashkey/               # MockUSDC + Python e2e ref impl
+│   ├── binance-smoke.ts            # Binance Pay sandbox e2e
+│   ├── hashkey-smoke.ts            # HashKey Chain Testnet e2e (TS)
+│   ├── coinbase-cdp-smoke.ts       # Coinbase CDP + Base Sepolia e2e ⭐ NEW
+│   ├── cdp-ping.ts                 # CDP credential check
+│   └── hashkey/                    # MockUSDC + Python e2e ref impl
 └── docs/
-    ├── STRATEGY.md            # 项目北极星文档
-    ├── HASHKEY_DEMO.md        # HashKey Chain demo 复现指南
-    └── QUICKSTART.md          # 5 分钟跑通 demo
+    ├── STRATEGY.md                 # 项目北极星文档
+    ├── HASHKEY_DEMO.md             # HashKey Chain demo 复现指南
+    └── QUICKSTART.md               # 5 分钟跑通 demo
 ```
 
 ---
@@ -246,20 +248,26 @@ python3 scripts/hashkey/transfer-with-auth.py   # Python ref impl
 ### 🌱 Phase 3 · 通用钱包接入（持续演进）
 
 **核心理念**：任何钱包，只要满足 `WalletConnector` 接口的 5 个方法，都能即插即用接入。我们提供：
-- 📐 **接入指南** + 模板 fork（参考 `packages/wallet-hashkey/`）
-- ✅ **5 个 conformance test**（全过即合规）
+- 📐 **接入指南** + 模板 fork（参考 `packages/wallet-hashkey/` 或 `packages/wallet-coinbase-cdp/`）
+- ✅ **conformance test 套件**（全过即合规）
 - 📦 **自动发布到 npm**（merge 即 publish）
 
-**正在/即将接入的钱包**（顺序按 demand 触发，非时间排序）：
+**钱包接入状态**：
 
 | 类别 | 钱包 | 协议路径 | 状态 |
 |---|---|---|---|
-| **EVM 自托管（x402 路径）** | HashKey Chain · MetaMask Snap · WalletConnect v2 · Rainbow · Phantom (EVM) | x402 v1 | HashKey ✅ done · 其余正在接 |
-| **AWS 原版兼容** | Coinbase CDP · Stripe Privy | x402 v1 | 路径 D 另一半，可即插即用 |
-| **CEX-API（OAP-CEX 路径）** | Binance Pay ✅ · OKX Pay · Bitget Wallet · Bybit Pay · HashKey Pro Sandbox | OAP-CEX v0.1 | Binance done · 其余按需触发 |
-| **传统支付** | Stripe（信用卡）· 支付宝 · 微信支付 | 待定 protocol | 看市场需求 |
+| **EVM 自托管（x402 路径）** | **HashKey Chain** ✅ · MetaMask · WalletConnect · Rabby · Safe (multi-sig) · Rainbow · Phantom (EVM) | x402 v1 | HashKey **production-grade** · 其余 roadmap |
+| **AWS 原版兼容（managed）** | **Coinbase CDP** ✅ · Stripe Privy · Magic.link · Web3Auth · Crossmint · Fireblocks · Anchorage | x402 v1 | **CDP 已接入** · 其余 roadmap |
+| **非 EVM 链** | Solana Pay · Sui Pay · Stellar (SEP-29) · Lightning Network (LN-402) · Aptos · Polygon | per-chain protocol | roadmap |
+| **CEX-API（OAP-CEX 路径）** | **Binance Pay** ✅ · OKX Pay · Bitget Wallet · Bybit Pay · HashKey Pro · Bitfinex · KuCoin | OAP-CEX v0.1 | Binance done · 其余按需触发 |
+| **传统支付** | Stripe (Card) · Alipay · WeChat Pay · PayPal · Apple Pay · Google Pay · Venmo · Cash App | AP2 / W3C-PR / OAP-CEX | roadmap |
 
-**目标**：覆盖全部主流钱包/支付方式。**只要客户提需求 + 钱包方有 API，1-2 天内就能 ship 一个新 connector**。
+**当前已实现**（生产可用）：
+- ✅ **HashKey Chain** — TypeScript + Python 双实现，4 笔链上 tx 验证
+- ✅ **Coinbase CDP** — Base Sepolia + Circle 官方 USDC，4 笔链上 tx 验证（含从 CloudFront 生产 Lambda 路径）
+- ✅ **Binance Pay** — 协议层签名验证，20 unit tests pass
+
+**接入速度**：客户提需求 + 钱包方有 API，**1-2 天内 ship 新 connector** 到 npm。
 
 ### 🌳 Phase 4 · 标准化与生态（持续推进）
 

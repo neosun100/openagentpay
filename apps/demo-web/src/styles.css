@@ -111,10 +111,52 @@ pre {
 header.banner {
   background: linear-gradient(90deg, #1e1b4b 0%, #312e81 100%);
   border-bottom: 1px solid var(--border);
-  padding: 14px 24px;
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.banner-left h1 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.banner-tagline {
+  font-size: 12px;
+  color: rgba(216, 180, 254, 0.75);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  margin-left: 4px;
+}
+
+.banner-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.banner-github {
+  font-size: 13px;
+  color: #c4b5fd;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+.banner-github:hover {
+  background: rgba(192, 132, 252, 0.1);
+  border-color: rgba(192, 132, 252, 0.5);
 }
 
 header .title {
@@ -528,4 +570,195 @@ section.content h2 + p {
 .tx-link:hover {
   background: rgba(34, 197, 94, 0.2);
   text-decoration: none;
+}
+
+/* ============================================================================
+ *  Capability Bar — wallets/chains support strip
+ * ============================================================================ */
+
+.capability-bar {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, var(--bg-2) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.capability-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.capability-roadmap {
+  flex: 1;
+  justify-content: flex-end;
+  opacity: 0.85;
+}
+
+.capability-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--fg-dim);
+  margin-right: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.chip-button {
+  cursor: pointer;
+  background: transparent;
+  color: var(--fg);
+}
+
+.chip-meta {
+  font-size: 11px;
+  color: var(--fg-faint);
+  font-weight: 400;
+}
+
+/* Active = currently selected (glowing accent) */
+.chip-active {
+  background: rgba(48, 209, 88, 0.18);
+  border-color: rgba(48, 209, 88, 0.55);
+  color: #86efac;
+  box-shadow: 0 0 12px rgba(48, 209, 88, 0.25);
+}
+.chip-active .chip-meta {
+  color: rgba(134, 239, 172, 0.75);
+}
+.chip-active .chip-dot {
+  background: #30d158;
+  box-shadow: 0 0 8px #30d158;
+  animation: chipPulse 2s ease-in-out infinite;
+}
+
+/* Available = configured but not selected (clickable to switch) */
+.chip-available {
+  background: rgba(192, 132, 252, 0.08);
+  border-color: rgba(192, 132, 252, 0.3);
+  color: #d8b4fe;
+}
+.chip-available:hover {
+  background: rgba(192, 132, 252, 0.15);
+  border-color: rgba(192, 132, 252, 0.55);
+}
+.chip-available .chip-dot {
+  background: #c084fc;
+}
+
+/* Coming = roadmap (dashed border, dim) */
+.chip-coming {
+  background: transparent;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  color: var(--fg-dim);
+  font-weight: 400;
+}
+
+.chip-loading {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--fg-dim);
+  border-color: var(--border);
+}
+
+.chip-ellipsis {
+  background: rgba(192, 132, 252, 0.08);
+  color: #c4b5fd;
+  border: 1px dashed rgba(192, 132, 252, 0.3);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+@keyframes chipPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.15); }
+}
+
+/* ============================================================================
+ *  Tab status — shows current chain to the right of tabs
+ * ============================================================================ */
+.tab-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+.tab-status-pill {
+  font-size: 11px;
+  font-family: "SF Mono", "Monaco", monospace;
+  color: var(--fg-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 6px;
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-dot.status-active {
+  background: #30d158;
+  box-shadow: 0 0 6px #30d158;
+}
+
+/* Move tabs to use flex so tab-status sits to the right */
+nav.tabs {
+  align-items: stretch;
+}
+
+/* Chip category accents (subtle left border for roadmap chips) */
+.chip-cat-evm    { border-left: 3px solid rgba(192, 132, 252, 0.5); }   /* purple — EVM self-custodial */
+.chip-cat-managed{ border-left: 3px solid rgba(96, 165, 250, 0.5); }    /* blue — managed/institutional */
+.chip-cat-non-evm{ border-left: 3px solid rgba(34, 197, 94, 0.5); }     /* green — non-EVM chains */
+.chip-cat-cex    { border-left: 3px solid rgba(251, 191, 36, 0.5); }    /* amber — CEX */
+.chip-cat-trad   { border-left: 3px solid rgba(244, 114, 182, 0.5); }   /* pink — traditional payment */
+
+/* Capability roadmap section can wrap to 2 lines for many chips */
+.capability-roadmap {
+  flex: 1 1 100%;
+  justify-content: flex-start;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.15);
+}
+
+/* On wider screens keep it inline */
+@media (min-width: 1400px) {
+  .capability-roadmap {
+    flex: 1;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    justify-content: flex-end;
+  }
 }

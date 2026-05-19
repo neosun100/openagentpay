@@ -1,13 +1,18 @@
 /**
  * Lambda-shaped handlers — pure async functions that take a parsed request and
  * return a structured response. Used by the local Express server (server.ts)
- * and will be wrapped by API Gateway / Lambda Function URL handlers later.
+ * and wrapped by API Gateway / Lambda Function URL handlers.
+ *
+ * Path D Hybrid: every handler now accepts an optional `walletProvider`
+ * parameter (passed from the UI dropdown) and routes to the right connector
+ * bundle. Defaults to ctx.defaultProvider (HashKey) for backwards compat.
  *
  * Routes:
- *   GET  /api/wallet                → wallet status (address + balance)
- *   POST /api/session               → createPaymentSession
- *   POST /api/pay                   → processPayment
- *   GET  /api/session/:id           → getPaymentSession
+ *   GET  /api/wallet?walletProvider=...        → wallet status
+ *   POST /api/session                          → createPaymentSession
+ *   POST /api/pay         (body has walletProvider) → processPayment
+ *   GET  /api/session/:id                      → getPaymentSession
+ *   GET  /api/wallets                          → list available wallets
  *
  * @license Apache-2.0
  */
@@ -18,19 +23,16 @@ import {
   type PaymentRequest,
   type SessionId,
   type UserId,
+  type ProtocolId,
 } from "@openagentpay/core";
-import {
-  HASHKEY_PROTOCOL,
-  type HashKeyChainConnector,
-  hashkeyChainTestnet,
-  txExplorerUrl,
-  addressExplorerUrl,
-} from "@openagentpay/wallet-hashkey";
-import {
-  type InMemoryPaymentManager,
-} from "@openagentpay/core";
+import { type InMemoryPaymentManager } from "@openagentpay/core";
 
-import { context, type AppContext } from "./context.js";
+import {
+  context,
+  getBundle,
+  type AppContext,
+  type ConnectorBundle,
+} from "./context.js";
 
 // ============================================================================
 //  Common types
@@ -42,7 +44,42 @@ export interface ApiError {
 }
 
 // ============================================================================
-//  GET /api/wallet
+//  GET /api/wallets — list all available wallet providers
+// ============================================================================
+
+export interface WalletListEntry {
+  readonly walletProvider: string;
+  readonly displayName: string;
+  readonly chainName: string;
+  readonly chainId: number;
+  readonly tokenLabel: string;
+  readonly tokenAddress: string;
+  readonly agentAddress: string;
+}
+
+export async function listWallets(
+  ctx: AppContext = context()
+): Promise<{
+  readonly wallets: readonly WalletListEntry[];
+  readonly defaultProvider: string;
+}> {
+  const wallets: WalletListEntry[] = [];
+  for (const b of ctx.connectors.values()) {
+    wallets.push({
+      walletProvider: b.walletProvider,
+      displayName: b.displayName,
+      chainName: b.chainName,
+      chainId: b.chainId,
+      tokenLabel: b.tokenLabel,
+      tokenAddress: b.tokenAddress,
+      agentAddress: b.agentAddress,
+    });
+  }
+  return { wallets, defaultProvider: ctx.defaultProvider };
+}
+
+// ============================================================================
+//  GET /api/wallet?walletProvider=...
 // ============================================================================
 
 export interface WalletStatus {
@@ -52,40 +89,45 @@ export interface WalletStatus {
   readonly chainId: number;
   readonly token: string;
   readonly tokenAddress: string;
+  readonly tokenLabel: string;
   readonly tokenExplorer: string;
   readonly decimals: number;
   readonly balance: number;
   readonly balanceRaw: string;
   readonly instrumentId: string;
   readonly walletProvider: string;
+  readonly displayName: string;
 }
 
 export async function getWalletStatus(
+  walletProvider: string | undefined,
   ctx: AppContext = context()
 ): Promise<WalletStatus> {
+  const bundle = getBundle(ctx, walletProvider);
   const userId = ctx.demoUserId;
-  // Idempotent: repeated GET /api/wallet returns the same instrument
   const instrument = await ctx.manager.createPaymentInstrument(
-    ctx.connector.getCapabilities().walletProvider,
+    bundle.walletProvider,
     { userId }
   );
-  const balance = await ctx.connector.getBalance(instrument.id);
+  const balance = await bundle.connector.getBalance(instrument.id);
   const decimals = balance.money.decimals;
   const balanceRaw = balance.money.amountAtomic;
   const balanceFloat = Number(balanceRaw) / 10 ** decimals;
   return {
-    address: ctx.connector.agentAddress,
-    addressExplorer: addressExplorerUrl(hashkeyChainTestnet, ctx.connector.agentAddress),
-    network: hashkeyChainTestnet.name,
-    chainId: hashkeyChainTestnet.id,
+    address: bundle.agentAddress,
+    addressExplorer: bundle.addressExplorer(bundle.agentAddress),
+    network: bundle.chainName,
+    chainId: bundle.chainId,
     token: balance.money.currency,
-    tokenAddress: ctx.tokenAddress,
-    tokenExplorer: addressExplorerUrl(hashkeyChainTestnet, ctx.tokenAddress),
+    tokenAddress: bundle.tokenAddress,
+    tokenLabel: bundle.tokenLabel,
+    tokenExplorer: bundle.addressExplorer(bundle.tokenAddress),
     decimals,
     balance: balanceFloat,
     balanceRaw,
     instrumentId: instrument.id,
     walletProvider: instrument.walletProvider,
+    displayName: bundle.displayName,
   };
 }
 
@@ -173,7 +215,8 @@ export async function getSession(
 export interface PayBody {
   readonly sessionId: string;
   readonly amountUsdc: number;
-  readonly recipient?: string; // optional override; defaults to throwaway merchant
+  readonly recipient?: string;
+  readonly walletProvider?: string;
 }
 
 export interface PayResponse {
@@ -185,9 +228,9 @@ export interface PayResponse {
   readonly payer: string;
   readonly recipient: string;
   readonly network: string;
+  readonly walletProvider: string;
   readonly errorCode?: string;
   readonly errorMessage?: string;
-  /** Stripped-down payment payload + sig — useful for "what just happened" UI */
   readonly paymentPayload: {
     readonly chainId: number;
     readonly verifyingContract: string;
@@ -215,14 +258,20 @@ export interface PayResponse {
   };
 }
 
-/** Generate a throwaway recipient EOA on the fly. */
-function generateRecipient(connector: HashKeyChainConnector): string {
-  // We can't access viem here without making it a peer dep — but the connector
-  // already has access. Use a deterministic-but-random nonce-style address
-  // so each request sends to a different target.
-  const nonce = connector.generateNonce();
-  // Use first 40 hex chars of nonce as pseudo-address (fine for testnet demo).
-  return ("0x" + nonce.slice(2, 42)) as `0x${string}`;
+/** Generate a throwaway recipient EOA on the fly (using the bundle's connector). */
+function generateRecipient(bundle: ConnectorBundle): string {
+  const c = bundle.connector as any;
+  if (typeof c.generateNonce === "function") {
+    const nonce = c.generateNonce();
+    return ("0x" + nonce.slice(2, 42)) as `0x${string}`;
+  }
+  // Fallback: random
+  const rnd = new Uint8Array(20);
+  crypto.getRandomValues(rnd);
+  return ("0x" +
+    Array.from(rnd)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("")) as `0x${string}`;
 }
 
 export async function processPayment(
@@ -235,30 +284,45 @@ export async function processPayment(
   if (typeof body.amountUsdc !== "number" || body.amountUsdc <= 0) {
     throw apiError("VALIDATION", "amountUsdc must be a positive number");
   }
+  const bundle = getBundle(ctx, body.walletProvider);
   const userId = ctx.demoUserId;
   const instrument = await ctx.manager.createPaymentInstrument(
-    ctx.connector.getCapabilities().walletProvider,
+    bundle.walletProvider,
     { userId }
   );
-  const decimals = ctx.tokenDecimals;
-  const amountAtomic = BigInt(Math.round(body.amountUsdc * 10 ** decimals)).toString();
-  const recipient = body.recipient ?? generateRecipient(ctx.connector);
+  const decimals = bundle.tokenDecimals;
+  const amountAtomic = BigInt(
+    Math.round(body.amountUsdc * 10 ** decimals)
+  ).toString();
+  const recipient = body.recipient ?? generateRecipient(bundle);
   const validBefore = Math.floor(Date.now() / 1000) + 600;
   const amount: Money = {
     amountAtomic,
     decimals,
     currency: "USDC",
   };
+
+  // Both connectors advertise the same protocol id (x402-v1)
+  const protocol = bundle.connector
+    .getCapabilities()
+    .supportedProtocols[0] as ProtocolId;
+
+  const c = bundle.connector as any;
+  const nonce =
+    typeof c.generateNonce === "function"
+      ? c.generateNonce()
+      : "0x" + Array.from({ length: 64 }, () => "0").join("");
+
   const request: PaymentRequest = {
-    protocol: HASHKEY_PROTOCOL,
+    protocol,
     amount,
     recipient,
     asset: { symbol: "USDC", decimals },
     validAfter: 0,
     validBefore,
-    nonce: ctx.connector.generateNonce(),
-    rawPayload: { source: "demo-api" },
-    description: `OpenAgentPay micropayment (${body.amountUsdc} USDC on HashKey Chain Testnet)`,
+    nonce,
+    rawPayload: { source: "demo-api", walletProvider: bundle.walletProvider },
+    description: `OpenAgentPay micropayment (${body.amountUsdc} USDC on ${bundle.chainName})`,
   };
   const result = await ctx.manager.processPayment({
     sessionId: body.sessionId as SessionId,
@@ -271,27 +335,28 @@ export async function processPayment(
       success: false,
       amountUsdc: body.amountUsdc,
       amountAtomic,
-      payer: ctx.connector.agentAddress,
+      payer: bundle.agentAddress,
       recipient,
       network: result.settlement.network,
+      walletProvider: bundle.walletProvider,
       ...(result.settlement.errorCode !== undefined
         ? { errorCode: result.settlement.errorCode }
         : {}),
       ...(result.settlement.errorMessage !== undefined
         ? { errorMessage: result.settlement.errorMessage }
         : {}),
-      paymentPayload: extractPayload(result.signed!),
-      verifyResult: { isValid: false, payer: ctx.connector.agentAddress },
+      paymentPayload: extractPayload(result.signed!, bundle),
+      verifyResult: { isValid: false, payer: bundle.agentAddress },
       settleResult: {
         success: false,
         transaction: "",
         network: result.settlement.network,
-        payer: ctx.connector.agentAddress,
+        payer: bundle.agentAddress,
       },
     };
   }
   const tx = result.settlement.transactionRef;
-  const explorer = txExplorerUrl(hashkeyChainTestnet, tx);
+  const explorer = bundle.txExplorer(tx);
   const raw = result.settlement.raw as Record<string, string> | undefined;
   return {
     success: true,
@@ -299,18 +364,23 @@ export async function processPayment(
     explorerUrl: explorer,
     amountUsdc: body.amountUsdc,
     amountAtomic,
-    payer: ctx.connector.agentAddress,
+    payer: bundle.agentAddress,
     recipient,
     network: result.settlement.network,
-    paymentPayload: extractPayload(result.signed!),
-    verifyResult: { isValid: true, payer: ctx.connector.agentAddress },
+    walletProvider: bundle.walletProvider,
+    paymentPayload: extractPayload(result.signed!, bundle),
+    verifyResult: { isValid: true, payer: bundle.agentAddress },
     settleResult: {
       success: true,
       transaction: tx,
       network: result.settlement.network,
-      payer: ctx.connector.agentAddress,
-      ...(raw?.["blockNumber"] !== undefined ? { blockNumber: raw["blockNumber"] } : {}),
-      ...(raw?.["gasUsed"] !== undefined ? { gasUsed: raw["gasUsed"] } : {}),
+      payer: bundle.agentAddress,
+      ...(raw?.["blockNumber"] !== undefined
+        ? { blockNumber: raw["blockNumber"] }
+        : {}),
+      ...(raw?.["gasUsed"] !== undefined
+        ? { gasUsed: raw["gasUsed"] }
+        : {}),
     },
   };
 }
@@ -319,39 +389,82 @@ export async function processPayment(
 //  Helpers
 // ============================================================================
 
-function extractPayload(signed: NonNullable<Awaited<ReturnType<InMemoryPaymentManager["processPayment"]>>["signed"]>): PayResponse["paymentPayload"] {
-  const e = signed.extra as Record<string, unknown>;
-  const wire = e["signed"] as {
-    authorization: {
-      from: string;
-      to: string;
-      value: string;
-      validAfter: number;
-      validBefore: number;
-      nonce: string;
+/**
+ * Extract on-wire payment payload from `signed.extra`.
+ *
+ * Two shapes supported:
+ *   - HashKey: signed.extra = { signed: { authorization, signature, v, r, s, chainId, verifyingContract } }
+ *   - Coinbase CDP: signed.extra = { chainId, verifyingContract, v, r, s }
+ *     + outer signed has `request` (with auth fields) and `signature`
+ */
+function extractPayload(
+  signed: NonNullable<
+    Awaited<ReturnType<InMemoryPaymentManager["processPayment"]>>["signed"]
+  >,
+  bundle: ConnectorBundle
+): PayResponse["paymentPayload"] {
+  const e = (signed.extra ?? {}) as Record<string, unknown>;
+
+  // HashKey shape: extra.signed.{ authorization, signature, v, r, s, chainId, verifyingContract }
+  const hkWire = e["signed"] as
+    | {
+        authorization: {
+          from: string;
+          to: string;
+          value: string;
+          validAfter: number;
+          validBefore: number;
+          nonce: string;
+        };
+        signature: string;
+        v: number;
+        r: string;
+        s: string;
+        chainId: number;
+        verifyingContract: string;
+      }
+    | undefined;
+  if (hkWire) {
+    return {
+      chainId: hkWire.chainId,
+      verifyingContract: hkWire.verifyingContract,
+      authorization: {
+        from: hkWire.authorization.from,
+        to: hkWire.authorization.to,
+        value: hkWire.authorization.value,
+        validAfter: hkWire.authorization.validAfter,
+        validBefore: hkWire.authorization.validBefore,
+        nonce: hkWire.authorization.nonce,
+      },
+      signature: hkWire.signature,
+      v: hkWire.v,
+      r: hkWire.r,
+      s: hkWire.s,
     };
-    signature: string;
-    v: number;
-    r: string;
-    s: string;
-    chainId: number;
-    verifyingContract: string;
-  };
+  }
+
+  // CDP shape: outer { request, signature, signer, extra: { chainId, vc, v, r, s } }
+  const chainId = (e["chainId"] as number) ?? bundle.chainId;
+  const verifyingContract =
+    (e["verifyingContract"] as string) ?? bundle.tokenAddress;
+  const v = (e["v"] as number) ?? 0;
+  const r = (e["r"] as string) ?? "0x";
+  const s = (e["s"] as string) ?? "0x";
   return {
-    chainId: wire.chainId,
-    verifyingContract: wire.verifyingContract,
+    chainId,
+    verifyingContract,
     authorization: {
-      from: wire.authorization.from,
-      to: wire.authorization.to,
-      value: wire.authorization.value,
-      validAfter: wire.authorization.validAfter,
-      validBefore: wire.authorization.validBefore,
-      nonce: wire.authorization.nonce,
+      from: signed.signer,
+      to: signed.request.recipient,
+      value: signed.request.amount.amountAtomic,
+      validAfter: signed.request.validAfter,
+      validBefore: signed.request.validBefore,
+      nonce: signed.request.nonce,
     },
-    signature: wire.signature,
-    v: wire.v,
-    r: wire.r,
-    s: wire.s,
+    signature: signed.signature,
+    v,
+    r,
+    s,
   };
 }
 

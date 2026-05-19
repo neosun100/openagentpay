@@ -44,6 +44,14 @@ export interface DemoStackProps extends cdk.StackProps {
   readonly hashkeyUsdcAddress: string;
   /** HashKey Chain Testnet RPC URL. Optional override. */
   readonly hashkeyRpcUrl?: string;
+  /** Coinbase CDP V2 API Key ID (UUID). Optional — if absent, CDP wallet skipped. */
+  readonly coinbaseCdpApiKeyId?: string;
+  /** Coinbase CDP V2 API Key Secret (base64). Stored in Secrets Manager. */
+  readonly coinbaseCdpApiKeySecret?: string;
+  /** Coinbase CDP V2 Wallet Secret (PKCS#8 PEM). Stored in Secrets Manager. */
+  readonly coinbaseCdpWalletSecret?: string;
+  /** Coinbase CDP managed account address (created via cdp.evm.createAccount). */
+  readonly coinbaseCdpAgentAddress?: string;
 }
 
 export class DemoStack extends cdk.Stack {
@@ -63,6 +71,29 @@ export class DemoStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY, // demo-friendly
     });
 
+    // Coinbase CDP secrets — only created if CDP credentials provided
+    const cdpEnabled =
+      props.coinbaseCdpApiKeyId &&
+      props.coinbaseCdpApiKeySecret &&
+      props.coinbaseCdpWalletSecret;
+
+    let cdpApiKeySecretRes: secretsmanager.Secret | undefined;
+    let cdpWalletSecretRes: secretsmanager.Secret | undefined;
+    if (cdpEnabled) {
+      cdpApiKeySecretRes = new secretsmanager.Secret(this, "CoinbaseCdpApiKeySecret", {
+        description:
+          "OpenAgentPay Coinbase CDP V2 API Key Secret (base64 PEM, KMS-encrypted)",
+        secretStringValue: cdk.SecretValue.unsafePlainText(props.coinbaseCdpApiKeySecret!),
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+      cdpWalletSecretRes = new secretsmanager.Secret(this, "CoinbaseCdpWalletSecret", {
+        description:
+          "OpenAgentPay Coinbase CDP V2 Wallet Secret (PKCS#8 PEM, KMS-encrypted)",
+        secretStringValue: cdk.SecretValue.unsafePlainText(props.coinbaseCdpWalletSecret!),
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+    }
+
     // -------------------------------------------------------------------------
     //  2. Lambda Function URL — runs demo-api
     // -------------------------------------------------------------------------
@@ -80,6 +111,15 @@ export class DemoStack extends cdk.Stack {
         HASHKEY_TESTNET_AGENT_PRIVATE_KEY_SECRET_ARN: pkSecret.secretArn,
         HASHKEY_USDC_ADDRESS: props.hashkeyUsdcAddress,
         ...(props.hashkeyRpcUrl ? { HASHKEY_RPC_URL: props.hashkeyRpcUrl } : {}),
+        // Coinbase CDP — only set if enabled
+        ...(cdpEnabled
+          ? {
+              COINBASE_CDP_API_KEY_ID: props.coinbaseCdpApiKeyId!,
+              COINBASE_CDP_API_KEY_SECRET_ARN: cdpApiKeySecretRes!.secretArn,
+              COINBASE_CDP_WALLET_SECRET_ARN: cdpWalletSecretRes!.secretArn,
+              COINBASE_CDP_AGENT_ADDRESS: props.coinbaseCdpAgentAddress!,
+            }
+          : {}),
         NODE_OPTIONS: "--enable-source-maps",
       },
       bundling: {
@@ -97,6 +137,8 @@ export class DemoStack extends cdk.Stack {
 
     // Grant Lambda permission to read the secret
     pkSecret.grantRead(apiFn);
+    if (cdpApiKeySecretRes) cdpApiKeySecretRes.grantRead(apiFn);
+    if (cdpWalletSecretRes) cdpWalletSecretRes.grantRead(apiFn);
 
     // -------------------------------------------------------------------------
     //  2. API Gateway HTTP API — public-facing entrypoint to Lambda.
@@ -223,5 +265,15 @@ export class DemoStack extends cdk.Stack {
     new cdk.CfnOutput(this, "BucketName", { value: webBucket.bucketName });
     new cdk.CfnOutput(this, "DistributionId", { value: distribution.distributionId });
     new cdk.CfnOutput(this, "SecretArn", { value: pkSecret.secretArn });
+    if (cdpApiKeySecretRes) {
+      new cdk.CfnOutput(this, "CdpApiKeySecretArn", {
+        value: cdpApiKeySecretRes.secretArn,
+      });
+    }
+    if (cdpWalletSecretRes) {
+      new cdk.CfnOutput(this, "CdpWalletSecretArn", {
+        value: cdpWalletSecretRes.secretArn,
+      });
+    }
   }
 }

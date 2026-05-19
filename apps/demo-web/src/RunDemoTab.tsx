@@ -17,7 +17,7 @@ interface StepState {
   error?: string;
 }
 
-export function RunDemoTab() {
+export function RunDemoTab({ walletProvider }: { walletProvider: string }) {
   const [budget, setBudget] = useState(1.0);
   const [expiry, setExpiry] = useState(60);
   const [amount, setAmount] = useState(0.1);
@@ -34,7 +34,7 @@ export function RunDemoTab() {
   async function runStep1() {
     setStep1({ status: "running" });
     try {
-      const r = await api.wallet();
+      const r = await api.wallet(walletProvider);
       setStep1({ status: "success", result: r });
     } catch (e) {
       setStep1({ status: "error", error: (e as Error).message });
@@ -55,7 +55,7 @@ export function RunDemoTab() {
     if (!session) return;
     setStep3({ status: "running" });
     try {
-      const r = await api.pay(session.sessionId, amount);
+      const r = await api.pay(session.sessionId, amount, walletProvider);
       setStep3({ status: r.success ? "success" : "error", result: r, ...(r.success ? {} : { error: r.errorMessage }) });
     } catch (e) {
       setStep3({ status: "error", error: (e as Error).message });

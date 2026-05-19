@@ -18,8 +18,8 @@ interface ChatMsg {
 
 const TOOLS = [
   { name: "get_market_data", price: "free", desc: "实时价格快照（CoinGecko 模拟）" },
-  { name: "buy_market_analysis", price: "$0.001", desc: "AI 技术分析（付费 → HashKey Chain 上链）" },
-  { name: "buy_research_report", price: "$0.005", desc: "深度研报（付费 → HashKey Chain 上链）" },
+  { name: "buy_market_analysis", price: "$0.001", desc: "AI 技术分析（付费 → 链上结算）" },
+  { name: "buy_research_report", price: "$0.005", desc: "深度研报（付费 → 链上结算）" },
 ];
 
 const PRESETS = [
@@ -28,7 +28,7 @@ const PRESETS = [
   { label: "付费：减半研报", price: 0.005 },
 ];
 
-export function AiAgentTab() {
+export function AiAgentTab({ walletProvider }: { walletProvider: string }) {
   const [messages, setMessages] = useState<ChatMsg[]>([
     {
       role: "agent",
@@ -95,13 +95,13 @@ export function AiAgentTab() {
         ]);
 
         // 真发起一笔上链
-        const result = await api.pay(s.sessionId, price);
+        const result = await api.pay(s.sessionId, price, walletProvider);
         if (result.success) {
           setMessages((m) => [
             ...m,
             {
               role: "tool",
-              content: `✅ Settlement on HashKey Chain Testnet:\n  tx: ${result.txHash}\n  gas: ${result.settleResult.gasUsed}\n  block: ${result.settleResult.blockNumber}\n  ${result.explorerUrl}`,
+              content: `✅ Settlement on ${result.network ?? "chain"}:\n  tx: ${result.txHash}\n  gas: ${result.settleResult.gasUsed}\n  block: ${result.settleResult.blockNumber}\n  ${result.explorerUrl}`,
             },
           ]);
           await sleep(500);
@@ -143,7 +143,7 @@ export function AiAgentTab() {
       <h2>AI Trading Assistant</h2>
       <p>
         模拟 Strands Agent + Claude Sonnet 在 AgentCore Runtime 里自主决策、自主付费。
-        免费工具直接用，付费工具触发 HashKey Chain 真实链上结算。
+        免费工具直接用，付费工具触发 真实链上结算（按 Wallet Provider 路由）。
       </p>
 
       <div className="agent-panel">
