@@ -18,6 +18,72 @@ working snapshot.
 - Solana Pay protocol adapter (non-EVM path)
 - More EVM connectors (MetaMask, WalletConnect, Rabby, Safe)
 
+## [0.4.0] · 2026-05-19 — **Governance: 7-Layer Guardrail**
+
+> **Headline**: OpenAgentPay now ships **Layer 3 (Policy) + Layer 5 (Compliance) +
+> Layer 7 (Audit)** of the AgentCore Payments-style 7-layer Guardrail. Every payment
+> goes through a configurable spending policy chain, sanctions check, and append-only
+> audit log — all enforced before signing or settlement.
+
+### Added — `@openagentpay/governance` package
+
+- **PolicyEngine** with composable rules:
+  - `velocityLimit({ windowMs, maxCount, maxAmountAtomic })` — sliding-window rate limits
+  - `amountThreshold({ maxAtomic })` — single-payment hard cap
+  - `merchantWhitelist(addresses)` / `merchantBlacklist(addresses)` — allow/block lists
+  - `walletProviderWhitelist(providers)` — restrict wallets per agent
+  - `timeOfDay({ startHourUtc, endHourUtc })` — only allow during business hours
+- **ComplianceChecker** for sanctions / OFAC / illicit finance:
+  - `StaticSanctionsChecker` — in-memory list with multiple sources
+  - `CompositeComplianceChecker` — fail-closed aggregator (extension point for Chainalysis / TRM Labs / Elliptic)
+- **AuditLogger** with append-only structured events:
+  - `InMemoryAuditSink` (capacity-bounded circular buffer for demo)
+  - `ConsoleAuditSink` (single-line JSON for grep/jq parsing)
+  - Future production sinks: S3 / CloudWatch / OpenSearch / Splunk
+- **GovernanceManager** facade — single `preCheck()` call runs Policy + Compliance + Audit
+- 23 unit tests covering all policies, compliance composition, audit retention
+
+### Added — Demo API integration
+
+- `apps/demo-api/src/context.ts` builds a default `GovernanceManager` with:
+  - $50 single-payment cap (`amountThreshold`)
+  - 20 payments per minute velocity limit
+  - $100 hourly spend cap velocity limit
+  - Demo sanctions list (Tornado Cash router + Lazarus Group illustrative addresses)
+- `POST /api/pay` runs `governance.preCheck()` BEFORE signing — denies surface as
+  `success: false, errorCode: 'policy_denied'` with structured reason
+- Successful and failed payments record `recordSuccess` / `recordFailure` audit events
+- **`GET /api/governance`** new endpoint — lists active policies, compliance status,
+  last 50 audit events. UI can subscribe / refresh to show audit trail in real time.
+- Recent payments tracked in-memory for velocity policy lookback
+
+### Test results — `pnpm -r test`
+
+```
+@openagentpay/core              21 passed
+@openagentpay/governance        23 passed   ← NEW
+@openagentpay/protocol-cex-pay  18 passed
+@openagentpay/wallet-hashkey    23 passed
+@openagentpay/wallet-coinbase-cdp 11 passed
+@openagentpay/wallet-binance    20 passed
+─────────────────────────────────────────
+Total                          116 passed   (was 93)
+```
+
+### 7-Layer Guardrail status (post v0.4.0)
+
+| # | Layer | OpenAgentPay implementation | Status |
+|---|---|---|---|
+| 1 | Authorization | Out of scope (upstream auth) | — |
+| 2 | Session | `@openagentpay/core` SessionManager (budget + TTL) | ✅ |
+| 3 | **Policy** | `@openagentpay/governance` PolicyEngine | ✅ NEW |
+| 4 | On-chain | EIP-3009 transferWithAuthorization | ✅ |
+| 5 | **Compliance** | `@openagentpay/governance` ComplianceChecker | ✅ NEW |
+| 6 | Identity | AWS Secrets Manager + KMS | ✅ |
+| 7 | **Audit** | `@openagentpay/governance` AuditLogger | ✅ NEW |
+
+---
+
 ---
 
 ## [0.3.0] · 2026-05-19 — **Path D Hybrid: Multi-Wallet, Multi-Chain**

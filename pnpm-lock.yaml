@@ -11,6 +11,9 @@ importers:
       '@coinbase/cdp-sdk':
         specifier: ^1.49.2
         version: 1.49.2(typescript@5.9.3)
+      '@openagentpay/governance':
+        specifier: workspace:*
+        version: link:packages/governance
       '@openagentpay/wallet-coinbase-cdp':
         specifier: workspace:*
         version: link:packages/wallet-coinbase-cdp
@@ -63,6 +66,9 @@ importers:
       '@openagentpay/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@openagentpay/governance':
+        specifier: workspace:*
+        version: link:../../packages/governance
       '@openagentpay/wallet-coinbase-cdp':
         specifier: workspace:*
         version: link:../../packages/wallet-coinbase-cdp
@@ -140,6 +146,22 @@ importers:
         version: 0.24.2
 
   packages/core: {}
+
+  packages/governance:
+    dependencies:
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.19
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9(@types/node@22.19.19)
 
   packages/protocol-cex-pay:
     dependencies:

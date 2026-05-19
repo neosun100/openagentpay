@@ -28,6 +28,7 @@ import type {
 import {
   createSession,
   getSession,
+  getGovernanceStatus,
   getWalletStatus,
   listWallets,
   processPayment,
@@ -100,6 +101,12 @@ export async function handler(
     if (method === "GET" && path === "/api/wallet") {
       const wp = event.queryStringParameters?.["walletProvider"];
       const data = await getWalletStatus(wp);
+      return jsonResponse(data);
+    }
+
+    // GET /api/governance — policies + audit log
+    if (method === "GET" && path === "/api/governance") {
+      const data = await getGovernanceStatus();
       return jsonResponse(data);
     }
 

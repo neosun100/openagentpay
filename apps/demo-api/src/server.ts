@@ -17,6 +17,7 @@ import express, { type Request, type Response } from "express";
 import {
   createSession,
   getSession,
+  getGovernanceStatus,
   getWalletStatus,
   listWallets,
   processPayment,
@@ -75,6 +76,18 @@ app.get("/api/wallet", async (req: Request, res: Response) => {
   try {
     const wp = req.query["walletProvider"] as string | undefined;
     const data = await getWalletStatus(wp);
+    res.json(data);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// ----------------------------------------------------------------------------
+//  GET /api/governance — policies + audit log
+// ----------------------------------------------------------------------------
+app.get("/api/governance", async (_req: Request, res: Response) => {
+  try {
+    const data = await getGovernanceStatus();
     res.json(data);
   } catch (err) {
     handleError(res, err);
@@ -158,9 +171,12 @@ ensureContext()
       console.log(`    GET  /api/health`);
       console.log(`    GET  /api/wallets                                         (list providers)`);
       console.log(`    GET  /api/wallet?walletProvider=...                       (status)`);
+      console.log(`    GET  /api/governance                                      (policies + audit log)`);
       console.log(`    POST /api/session   { budgetUsd, expiryMinutes }`);
       console.log(`    GET  /api/session/:id`);
       console.log(`    POST /api/pay       { sessionId, amountUsdc, recipient?, walletProvider? }`);
+      console.log("");
+      console.log(`  Governance enabled: ${ctx.policyDescriptions.length} policies, sanctions check on`);
       console.log("");
     });
   })

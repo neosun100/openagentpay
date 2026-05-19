@@ -33,6 +33,79 @@ import {
   type AppContext,
   type ConnectorBundle,
 } from "./context.js";
+import type { RecentPaymentRecord } from "@openagentpay/governance";
+
+// In-memory recent payments cache (per process — shared with governance for velocity policies)
+const RECENT: RecentPaymentRecord[] = [];
+function pushRecent(rec: RecentPaymentRecord): void {
+  RECENT.push(rec);
+  // Cap at 500 most recent for memory bound
+  if (RECENT.length > 500) RECENT.splice(0, RECENT.length - 500);
+}
+
+// ============================================================================
+//  GET /api/governance — list policies + recent audit events
+// ============================================================================
+
+export interface GovernanceStatus {
+  readonly policies: ReadonlyArray<{ readonly name: string }>;
+  readonly compliance: {
+    readonly enabled: boolean;
+    readonly checker: string;
+    readonly listSize?: number;
+  };
+  readonly auditLog: ReadonlyArray<{
+    readonly eventId: string;
+    readonly timestamp: string;
+    readonly kind: string;
+    readonly actor: string;
+    readonly result: string;
+    readonly walletProvider?: string;
+    readonly sessionId?: string;
+    readonly recipient?: string;
+    readonly amountAtomic?: string;
+    readonly currency?: string;
+    readonly chain?: string;
+    readonly txHash?: string;
+    readonly reason?: string;
+  }>;
+  readonly auditCount: number;
+}
+
+export async function getGovernanceStatus(
+  ctx: AppContext = context()
+): Promise<GovernanceStatus> {
+  const events = ctx.auditSink.readAll().slice(-50); // last 50 events
+  return {
+    policies: ctx.policyDescriptions,
+    compliance: {
+      enabled: true,
+      checker: "StaticSanctionsChecker (demo)",
+      // listSize comes from internal index — we know it for the demo list
+      listSize: 2,
+    },
+    auditLog: events.map((e) => ({
+      eventId: e.eventId,
+      timestamp: e.timestamp,
+      kind: e.kind,
+      actor: e.actor,
+      result: e.result,
+      ...(e.walletProvider !== undefined
+        ? { walletProvider: e.walletProvider }
+        : {}),
+      ...(e.sessionId !== undefined ? { sessionId: e.sessionId } : {}),
+      ...(e.recipient !== undefined ? { recipient: e.recipient } : {}),
+      ...(e.amountAtomic !== undefined
+        ? { amountAtomic: e.amountAtomic }
+        : {}),
+      ...(e.currency !== undefined ? { currency: e.currency } : {}),
+      ...(e.chain !== undefined ? { chain: e.chain } : {}),
+      ...(e.txHash !== undefined ? { txHash: e.txHash } : {}),
+      ...(e.reason !== undefined ? { reason: e.reason } : {}),
+    })),
+    auditCount: ctx.auditSink.size(),
+  };
+}
 
 // ============================================================================
 //  Common types
@@ -324,6 +397,58 @@ export async function processPayment(
     rawPayload: { source: "demo-api", walletProvider: bundle.walletProvider },
     description: `OpenAgentPay micropayment (${body.amountUsdc} USDC on ${bundle.chainName})`,
   };
+
+  // -------------------------------------------------------------------------
+  //  Layer 3 + 5 Guardrail: Policy + Compliance pre-check
+  // -------------------------------------------------------------------------
+  const session = await ctx.sessionManager.getSession(body.sessionId as SessionId);
+  if (!session) {
+    throw apiError("NOT_FOUND", "Session not found");
+  }
+  const preCheck = await ctx.governance.preCheck({
+    userId: ctx.demoUserId,
+    walletProvider: bundle.walletProvider,
+    request,
+    session,
+    recentPayments: RECENT,
+  });
+  if (!preCheck.allowed) {
+    return {
+      success: false,
+      amountUsdc: body.amountUsdc,
+      amountAtomic,
+      payer: bundle.agentAddress,
+      recipient,
+      network: bundle.chainName,
+      walletProvider: bundle.walletProvider,
+      errorCode: "policy_denied",
+      errorMessage: preCheck.reason ?? "Governance policy denied this payment",
+      paymentPayload: {
+        chainId: bundle.chainId,
+        verifyingContract: bundle.tokenAddress,
+        authorization: {
+          from: bundle.agentAddress,
+          to: recipient,
+          value: amountAtomic,
+          validAfter: 0,
+          validBefore,
+          nonce,
+        },
+        signature: "",
+        v: 0,
+        r: "0x",
+        s: "0x",
+      },
+      verifyResult: { isValid: false, payer: bundle.agentAddress },
+      settleResult: {
+        success: false,
+        transaction: "",
+        network: bundle.chainName,
+        payer: bundle.agentAddress,
+      },
+    };
+  }
+
   const result = await ctx.manager.processPayment({
     sessionId: body.sessionId as SessionId,
     instrumentId: instrument.id as InstrumentId,
@@ -331,6 +456,30 @@ export async function processPayment(
   });
 
   if (!result.success || !result.settlement.transactionRef) {
+    // Layer 7 audit: record failure
+    await ctx.governance.recordFailure({
+      userId: ctx.demoUserId,
+      walletProvider: bundle.walletProvider,
+      sessionId: body.sessionId,
+      instrumentId: instrument.id,
+      recipient,
+      amountAtomic,
+      currency: "USDC",
+      chain: result.settlement.network,
+      ...(result.settlement.errorCode !== undefined
+        ? { errorCode: result.settlement.errorCode }
+        : {}),
+      ...(result.settlement.errorMessage !== undefined
+        ? { errorMessage: result.settlement.errorMessage }
+        : {}),
+    });
+    pushRecent({
+      timestamp: Date.now(),
+      amount,
+      recipient,
+      walletProvider: bundle.walletProvider,
+      success: false,
+    });
     return {
       success: false,
       amountUsdc: body.amountUsdc,
@@ -358,6 +507,31 @@ export async function processPayment(
   const tx = result.settlement.transactionRef;
   const explorer = bundle.txExplorer(tx);
   const raw = result.settlement.raw as Record<string, string> | undefined;
+
+  // Layer 7 audit: record success
+  await ctx.governance.recordSuccess({
+    userId: ctx.demoUserId,
+    walletProvider: bundle.walletProvider,
+    sessionId: body.sessionId,
+    instrumentId: instrument.id,
+    recipient,
+    amountAtomic,
+    currency: "USDC",
+    chain: result.settlement.network,
+    txHash: tx,
+    metadata: {
+      blockNumber: raw?.["blockNumber"],
+      gasUsed: raw?.["gasUsed"],
+    },
+  });
+  pushRecent({
+    timestamp: Date.now(),
+    amount,
+    recipient,
+    walletProvider: bundle.walletProvider,
+    success: true,
+  });
+
   return {
     success: true,
     txHash: tx,

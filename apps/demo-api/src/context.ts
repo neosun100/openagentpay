@@ -39,6 +39,16 @@ import {
   BASE_SEPOLIA_CHAIN,
   BASE_SEPOLIA_USDC_ADDRESS,
 } from "@openagentpay/wallet-coinbase-cdp";
+import {
+  GovernanceManager,
+  InMemoryAuditSink,
+  InMemoryPolicyEngine,
+  StaticSanctionsChecker,
+  DEMO_SANCTIONS_LIST,
+  velocityLimit,
+  amountThreshold,
+  type AuditEvent,
+} from "@openagentpay/governance";
 
 // ----------------------------------------------------------------------------
 //  .env.local loader (zero deps, local dev only)
@@ -132,6 +142,12 @@ export interface AppContext {
   readonly connectors: Map<WalletProviderId, ConnectorBundle>;
   /** Default wallet provider (HashKey for backwards compat with old UI) */
   readonly defaultProvider: WalletProviderId;
+  /** Layer 3+5+7 Guardrail (Policy, Compliance, Audit). */
+  readonly governance: GovernanceManager;
+  /** Underlying audit sink — exposed so the API can list recent events. */
+  readonly auditSink: InMemoryAuditSink;
+  /** Active policies — exposed so the API can describe what's enforced. */
+  readonly policyDescriptions: ReadonlyArray<{ readonly name: string }>;
 }
 
 let _ctx: AppContext | null = null;
@@ -297,12 +313,52 @@ async function _buildContext(): Promise<AppContext> {
   const defaultProvider = (hashKey?.walletProvider ??
     [...connectors.keys()][0]) as WalletProviderId;
 
+  // -------------------------------------------------------------------------
+  //  Governance — Policy + Compliance + Audit (Guardrail Layer 3, 5, 7)
+  // -------------------------------------------------------------------------
+  const policyEngine = new InMemoryPolicyEngine();
+
+  // Demo policies (sensible defaults — production would tune these per agent)
+  policyEngine.use(
+    amountThreshold({
+      maxAtomic: BigInt(50 * 1e6).toString(), // $50 hard cap per single tx
+      currency: "USDC",
+    })
+  );
+  policyEngine.use(
+    velocityLimit({
+      windowMs: 60 * 1000, // 1 minute
+      maxCount: 20, // max 20 payments per minute
+    })
+  );
+  policyEngine.use(
+    velocityLimit({
+      windowMs: 60 * 60 * 1000, // 1 hour
+      maxAmountAtomic: BigInt(100 * 1e6).toString(), // $100 cap per hour
+      currency: "USDC",
+    })
+  );
+
+  const complianceChecker = new StaticSanctionsChecker([DEMO_SANCTIONS_LIST]);
+
+  const auditSink = new InMemoryAuditSink(500); // keep last 500 events
+  const governance = new GovernanceManager({
+    policyEngine,
+    complianceChecker,
+    auditSink,
+  });
+
+  const policyDescriptions = policyEngine.list();
+
   return {
     manager,
     sessionManager,
     demoUserId: "demo-user" as UserId,
     connectors,
     defaultProvider,
+    governance,
+    auditSink,
+    policyDescriptions,
   };
 }
 
