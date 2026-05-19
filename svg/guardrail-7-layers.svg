@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 920">
+  <style>
+    text { font-family: 'Segoe UI', system-ui, sans-serif; }
+    .l-num { font-family: 'SF Mono', 'Monaco', monospace; }
+  </style>
+
+  <!-- Background -->
+  <rect width="600" height="920" rx="12" fill="#0f172a"/>
+
+  <!-- Title -->
+  <text x="300" y="40" font-size="22" font-weight="700" fill="#e2e8f0" text-anchor="middle">
+    OpenAgentPay · 7-Layer Guardrail
+  </text>
+  <text x="300" y="62" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="1.5">
+    PAYMENT REQUEST  →  STACKED CHECKS  →  ON-CHAIN SETTLEMENT
+  </text>
+
+  <!-- Top: Agent / Request -->
+  <rect x="100" y="86" width="400" height="44" rx="22" fill="#312e81" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="300" y="105" font-size="13" font-weight="600" fill="#e0e7ff" text-anchor="middle">
+    🤖 AI Agent  ·  HTTP 402 Payment Required
+  </text>
+  <text x="300" y="121" font-size="10" fill="#a5b4fc" text-anchor="middle">
+    PaymentRequest { recipient, amount, validBefore, nonce, ... }
+  </text>
+
+  <!-- Arrow down -->
+  <line x1="300" y1="135" x2="300" y2="155" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="295,150 300,158 305,150" fill="#94a3b8"/>
+
+  <!-- ============= 7 layers ============= -->
+  <!-- Each: y0 = 165 + i*78, height 70 -->
+
+  <!-- L1 Authorization (out-of-scope, dimmed) -->
+  <g opacity="0.55">
+    <rect x="40" y="165" width="520" height="70" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <rect x="40" y="165" width="6" height="70" rx="3" fill="#64748b"/>
+    <text x="60" y="190" font-size="13" font-weight="700" fill="#cbd5e1">
+      L1  Authorization
+      <tspan font-size="9" fill="#94a3b8" letter-spacing="0.5">  ·  out of scope</tspan>
+    </text>
+    <text x="60" y="208" font-size="11" fill="#94a3b8">End user explicitly grants the Agent access to the wallet</text>
+    <text x="60" y="223" font-size="10" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      handled upstream by Cognito / OIDC / SAML
+    </text>
+  </g>
+
+  <!-- L2 Session (active green) -->
+  <g>
+    <rect x="40" y="243" width="520" height="70" rx="8" fill="#1e293b" stroke="#30d158" stroke-width="1.5"/>
+    <rect x="40" y="243" width="6" height="70" rx="3" fill="#30d158"/>
+    <text x="60" y="268" font-size="13" font-weight="700" fill="#e2e8f0">
+      L2  Session
+      <tspan font-size="9" fill="#86efac" letter-spacing="0.5">  ·  ACTIVE</tspan>
+    </text>
+    <text x="60" y="286" font-size="11" fill="#94a3b8">Budget cap + TTL — enforced atomically</text>
+    <text x="60" y="301" font-size="10" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      @openagentpay/core · SessionManager · maxSpendAmount + expiryMinutes
+    </text>
+  </g>
+
+  <!-- L3 Policy (active green, NEW) -->
+  <g>
+    <rect x="40" y="321" width="520" height="70" rx="8" fill="#1e293b" stroke="#30d158" stroke-width="1.5"/>
+    <rect x="40" y="321" width="6" height="70" rx="3" fill="#30d158"/>
+    <text x="60" y="346" font-size="13" font-weight="700" fill="#e2e8f0">
+      L3  Policy
+      <tspan font-size="9" fill="#86efac" letter-spacing="0.5">  ·  ACTIVE</tspan>
+      <tspan font-size="9" fill="#fbbf24" letter-spacing="0.5">  ·  NEW v0.4.0</tspan>
+    </text>
+    <text x="60" y="364" font-size="11" fill="#94a3b8">Velocity limits · amount thresholds · merchant rules · time-of-day</text>
+    <text x="60" y="379" font-size="10" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      @openagentpay/governance · PolicyEngine · composable · first-deny-wins
+    </text>
+  </g>
+
+  <!-- L4 On-chain (active green) -->
+  <g>
+    <rect x="40" y="399" width="520" height="70" rx="8" fill="#1e293b" stroke="#30d158" stroke-width="1.5"/>
+    <rect x="40" y="399" width="6" height="70" rx="3" fill="#30d158"/>
+    <text x="60" y="424" font-size="13" font-weight="700" fill="#e2e8f0">
+      L4  On-chain
+      <tspan font-size="9" fill="#86efac" letter-spacing="0.5">  ·  ACTIVE</tspan>
+    </text>
+    <text x="60" y="442" font-size="11" fill="#94a3b8">Immutable record · EIP-3009 transferWithAuthorization · block + tx hash</text>
+    <text x="60" y="457" font-size="10" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      wallet-hashkey · wallet-coinbase-cdp · per-chain anchoring
+    </text>
+  </g>
+
+  <!-- L5 Compliance (active green, NEW) -->
+  <g>
+    <rect x="40" y="477" width="520" height="70" rx="8" fill="#1e293b" stroke="#30d158" stroke-width="1.5"/>
+    <rect x="40" y="477" width="6" height="70" rx="3" fill="#30d158"/>
+    <text x="60" y="502" font-size="13" font-weight="700" fill="#e2e8f0">
+      L5  Compliance
+      <tspan font-size="9" fill="#86efac" letter-spacing="0.5">  ·  ACTIVE</tspan>
+      <tspan font-size="9" fill="#fbbf24" letter-spacing="0.5">  ·  NEW v0.4.0</tspan>
+    </text>
+    <text x="60" y="520" font-size="11" fill="#94a3b8">Sanctions / OFAC / illicit finance · per-recipient pre-flight</text>
+    <text x="60" y="535" font-size="10" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      @openagentpay/governance · pluggable · Static / Chainalysis / TRM Labs
+    </text>
+  </g>
+
+  <!-- L6 Identity (active green) -->
+  <g>
+    <rect x="40" y="555" width="520" height="70" rx="8" fill="#1e293b" stroke="#30d158" stroke-width="1.5"/>
+    <rect x="40" y="555" width="6" height="70" rx="3" fill="#30d158"/>
+    <text x="60" y="580" font-size="13" font-weight="700" fill="#e2e8f0">
+      L6  Identity
+      <tspan font-size="9" fill="#86efac" letter-spacing="0.5">  ·  ACTIVE</tspan>
+    </text>
+    <text x="60" y="598" font-size="11" fill="#94a3b8">Secret management · private keys never in agent runtime</text>
+    <text x="60" y="613" font-size="10" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      AWS Secrets Manager + KMS · CDP TEE · loaded at Lambda boot
+    </text>
+  </g>
+
+  <!-- L7 Audit (active green, NEW) -->
+  <g>
+    <rect x="40" y="633" width="520" height="70" rx="8" fill="#1e293b" stroke="#30d158" stroke-width="1.5"/>
+    <rect x="40" y="633" width="6" height="70" rx="3" fill="#30d158"/>
+    <text x="60" y="658" font-size="13" font-weight="700" fill="#e2e8f0">
+      L7  Audit
+      <tspan font-size="9" fill="#86efac" letter-spacing="0.5">  ·  ACTIVE</tspan>
+      <tspan font-size="9" fill="#fbbf24" letter-spacing="0.5">  ·  NEW v0.4.0</tspan>
+    </text>
+    <text x="60" y="676" font-size="11" fill="#94a3b8">Append-only structured log · SOX / MRM / financial regulator-ready</text>
+    <text x="60" y="691" font-size="10" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      @openagentpay/governance · AuditLogger · pluggable sinks (S3 / CW / Splunk)
+    </text>
+  </g>
+
+  <!-- Arrow down to chain -->
+  <line x1="300" y1="710" x2="300" y2="730" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="295,725 300,733 305,725" fill="#94a3b8"/>
+
+  <!-- Bottom: Chain settlement -->
+  <rect x="100" y="740" width="400" height="44" rx="22" fill="#064e3b" stroke="#30d158" stroke-width="1.5"/>
+  <text x="300" y="759" font-size="13" font-weight="600" fill="#86efac" text-anchor="middle">
+    ⛓️ Settlement Layer
+  </text>
+  <text x="300" y="775" font-size="10" fill="#86efac" text-anchor="middle">
+    HashKey Chain Testnet  ·  Base Sepolia (Coinbase CDP)  ·  more chains coming
+  </text>
+
+  <!-- Footer: legend -->
+  <g transform="translate(40, 810)">
+    <rect width="520" height="60" rx="6" fill="#0b1224" stroke="#334155" stroke-width="1"/>
+
+    <text x="14" y="20" font-size="11" font-weight="700" fill="#e2e8f0" letter-spacing="1">LEGEND</text>
+
+    <circle cx="80" cy="34" r="5" fill="#30d158"/>
+    <text x="92" y="38" font-size="11" fill="#cbd5e1">Active in v0.4.0</text>
+
+    <rect x="200" y="29" width="10" height="10" rx="5" fill="#0f172a" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="216" y="38" font-size="11" fill="#cbd5e1">New this release</text>
+
+    <circle cx="358" cy="34" r="5" fill="#64748b"/>
+    <text x="370" y="38" font-size="11" fill="#cbd5e1">Out of scope</text>
+
+    <text x="14" y="53" font-size="9" fill="#64748b" font-family="SF Mono, Monaco, monospace">
+      Inspired by AWS Bedrock AgentCore Payments — open-sourced &amp; pluggable.
+    </text>
+  </g>
+</svg>

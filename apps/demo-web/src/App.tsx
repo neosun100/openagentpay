@@ -4,9 +4,10 @@ import { Sidebar } from "./Sidebar.js";
 import { RunDemoTab } from "./RunDemoTab.js";
 import { HowItWorksTab } from "./HowItWorksTab.js";
 import { AiAgentTab } from "./AiAgentTab.js";
+import { GuardrailTab } from "./GuardrailTab.js";
 import { api, type WalletEntry } from "./api.js";
 
-type TabId = "run" | "how" | "agent";
+type TabId = "run" | "how" | "agent" | "guardrail";
 
 /** Roadmap chips — wallets we plan to add but haven't implemented yet. */
 const ROADMAP_WALLETS: ReadonlyArray<{
@@ -169,6 +170,15 @@ export function App() {
             Strands 自主付费
           </div>
         </button>
+        <button
+          className={tab === "guardrail" ? "active" : ""}
+          onClick={() => setTab("guardrail")}
+        >
+          Guardrail 🛡️
+          <div style={{ fontSize: 11, color: "var(--fg-dim)", marginTop: 2 }}>
+            7 层风控可视化
+          </div>
+        </button>
         {activeWallet && (
           <div className="tab-status">
             <span className="tab-status-pill">
@@ -190,6 +200,9 @@ export function App() {
         {tab === "run" && <RunDemoTab walletProvider={walletProvider} />}
         {tab === "how" && <HowItWorksTab />}
         {tab === "agent" && <AiAgentTab walletProvider={walletProvider} />}
+        {tab === "guardrail" && (
+          <GuardrailTab walletProvider={walletProvider} />
+        )}
       </main>
 
       <ActivityLog />

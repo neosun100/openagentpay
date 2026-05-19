@@ -762,3 +762,205 @@ nav.tabs {
     justify-content: flex-end;
   }
 }
+
+/* ============================================================================
+ *  Guardrail Tab — 7-Layer dashboard
+ * ============================================================================ */
+
+.guardrail-tab h2 {
+  margin: 0 0 4px 0;
+  font-size: 22px;
+}
+.guardrail-tab h3 {
+  margin: 24px 0 8px 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--fg-dim);
+}
+
+/* 7-Layer stack — vertical cards with thick left edge */
+.layer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.layer-card {
+  display: grid;
+  grid-template-columns: 56px 40px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+.layer-card:hover {
+  background: var(--bg-3);
+  transform: translateX(4px);
+}
+.layer-active {
+  border-left-color: #30d158;
+}
+.layer-out-of-scope {
+  border-left-color: #64748b;
+  opacity: 0.7;
+}
+
+.layer-num {
+  font-family: "SF Mono", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg-dim);
+  letter-spacing: 1px;
+}
+.layer-emoji {
+  font-size: 22px;
+  text-align: center;
+}
+.layer-body { display: flex; flex-direction: column; gap: 2px; }
+.layer-title {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.layer-subtitle {
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+.layer-impl {
+  font-size: 11px;
+  color: var(--fg-faint);
+  font-family: "SF Mono", monospace;
+  margin-top: 2px;
+}
+
+.layer-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.layer-badge-active {
+  background: rgba(48, 209, 88, 0.15);
+  color: #30d158;
+  border: 1px solid rgba(48, 209, 88, 0.4);
+}
+.layer-badge-oos {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--fg-dim);
+  border: 1px solid var(--border);
+}
+
+/* Card grid for policies + compliance */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 900px) {
+  .card-grid { grid-template-columns: 1fr; }
+}
+
+.policy-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.policy-list li {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 12px;
+}
+.policy-list li:last-child { border-bottom: none; }
+.policy-list code {
+  background: var(--bg-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #c4b5fd;
+  font-size: 11px;
+}
+
+/* Action log inside Try-It section */
+.action-log {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: "SF Mono", monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  color: #c4b5fd;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* Audit table */
+.audit-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 360px;
+  overflow-y: auto;
+  font-family: "SF Mono", monospace;
+  font-size: 11px;
+}
+.audit-row {
+  display: grid;
+  grid-template-columns: 60px 130px 80px 1fr;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg-3);
+  border-radius: 4px;
+  align-items: center;
+}
+.audit-allowed   { border-left: 3px solid #30d158; }
+.audit-succeeded { border-left: 3px solid #30d158; }
+.audit-denied    { border-left: 3px solid #ef4444; }
+.audit-failed    { border-left: 3px solid #f59e0b; }
+.audit-info      { border-left: 3px solid #64748b; }
+
+.audit-ts { color: var(--fg-faint); }
+.audit-kind { color: #c4b5fd; }
+.audit-result { font-weight: 700; }
+.audit-result-allowed,
+.audit-result-succeeded { color: #86efac; }
+.audit-result-denied { color: #fda4af; }
+.audit-result-failed { color: #fcd34d; }
+
+.audit-detail {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--fg);
+}
+.audit-pill {
+  background: rgba(192, 132, 252, 0.1);
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  color: #c4b5fd;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.audit-tx {
+  background: rgba(48, 209, 88, 0.08);
+  color: #86efac;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.audit-reason {
+  color: #fda4af;
+  font-style: italic;
+  font-size: 10px;
+}

@@ -225,6 +225,30 @@ python3 scripts/hashkey/transfer-with-auth.py   # Python ref impl
 
 ---
 
+## 🛡️ 7-Layer Guardrail · 借鉴 AgentCore Payments 的开源实现
+
+> **新增 (v0.4.0)**：OpenAgentPay 把 AgentCore Payments 的 7 层 Guardrail 设计**开源化、可插拔化**。每一层都是独立 OSS 组件，可以单独替换实现。Layer 3/5/7 由 [`@openagentpay/governance`](./packages/governance/) 提供。
+
+<p align="center">
+  <img src="https://img.aws.xin/uPic/guardrail-7-layers.png" alt="OpenAgentPay 7-Layer Guardrail" width="100%"/>
+</p>
+
+| # | 层 | 实现 | 状态 |
+|---|---|---|---|
+| 1 | 🔐 Authorization | 交给上游 auth (Cognito/OIDC/SAML) | out of scope |
+| 2 | 📋 **Session** | `@openagentpay/core` SessionManager | ✅ |
+| 3 | 📐 **Policy** | `@openagentpay/governance` PolicyEngine（6 内置 + 自定义）| ✅ NEW v0.4.0 |
+| 4 | ⛓️ **On-chain** | wallet connectors via EIP-3009 | ✅ |
+| 5 | 🛡️ **Compliance** | `@openagentpay/governance` ComplianceChecker（Static / Chainalysis / TRM） | ✅ NEW v0.4.0 |
+| 6 | 🔑 **Identity** | AWS Secrets Manager + KMS · Coinbase CDP TEE | ✅ |
+| 7 | 📜 **Audit** | `@openagentpay/governance` AuditLogger（pluggable sinks） | ✅ NEW v0.4.0 |
+
+**试一试**：[https://d1p7yxa99nxaye.cloudfront.net](https://d1p7yxa99nxaye.cloudfront.net) → **Guardrail** tab，看 7 层实时状态 + 一键触发 Policy deny / Sanctions match + 实时 audit log。
+
+详细文档：[📋 docs/GOVERNANCE.md](./docs/GOVERNANCE.md)（含每层实现细节 + 与 AgentCore Payments 对照表）
+
+---
+
 ## 🗺️ Roadmap
 
 > 这个 roadmap **不写时间**——OpenAgentPay 的核心抽象（`WalletConnector` + `ProtocolAdapter`）已经验证正确，剩下的扩展全是按通用接口的机械工作，**接入一个新钱包通常只需要 1-2 天**。具体节奏跟随生态进展和合作伙伴需求。

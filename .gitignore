@@ -76,3 +76,5 @@ logs/
 sandbox/
 scratch/
 *~$*
+guardrail-tab-*.png
+.playwright-mcp/
