@@ -35,12 +35,16 @@ import {
 } from "./context.js";
 import type { RecentPaymentRecord } from "@openagentpay/governance";
 
-// In-memory recent payments cache (per process — shared with governance for velocity policies)
-const RECENT: RecentPaymentRecord[] = [];
-function pushRecent(rec: RecentPaymentRecord): void {
-  RECENT.push(rec);
-  // Cap at 500 most recent for memory bound
-  if (RECENT.length > 500) RECENT.splice(0, RECENT.length - 500);
+/**
+ * Push a payment record into the context's recent-payments buffer
+ * (used by velocity policies for sliding-window lookback).
+ * Keeps last 500 to bound memory.
+ */
+function pushRecent(ctx: AppContext, rec: RecentPaymentRecord): void {
+  ctx.recentPayments.push(rec);
+  if (ctx.recentPayments.length > 500) {
+    ctx.recentPayments.splice(0, ctx.recentPayments.length - 500);
+  }
 }
 
 // ============================================================================
@@ -410,7 +414,7 @@ export async function processPayment(
     walletProvider: bundle.walletProvider,
     request,
     session,
-    recentPayments: RECENT,
+    recentPayments: ctx.recentPayments,
   });
   if (!preCheck.allowed) {
     return {
@@ -473,7 +477,7 @@ export async function processPayment(
         ? { errorMessage: result.settlement.errorMessage }
         : {}),
     });
-    pushRecent({
+    pushRecent(ctx, {
       timestamp: Date.now(),
       amount,
       recipient,
@@ -524,7 +528,7 @@ export async function processPayment(
       gasUsed: raw?.["gasUsed"],
     },
   });
-  pushRecent({
+  pushRecent(ctx, {
     timestamp: Date.now(),
     amount,
     recipient,

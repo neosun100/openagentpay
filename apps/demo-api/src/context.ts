@@ -148,6 +148,8 @@ export interface AppContext {
   readonly auditSink: InMemoryAuditSink;
   /** Active policies — exposed so the API can describe what's enforced. */
   readonly policyDescriptions: ReadonlyArray<{ readonly name: string }>;
+  /** Recent payments cache — used by velocity policies for sliding-window lookback. */
+  readonly recentPayments: import("@openagentpay/governance").RecentPaymentRecord[];
 }
 
 let _ctx: AppContext | null = null;
@@ -359,6 +361,7 @@ async function _buildContext(): Promise<AppContext> {
     governance,
     auditSink,
     policyDescriptions,
+    recentPayments: [],
   };
 }
 
@@ -400,4 +403,10 @@ export function getBundle(
 export function _resetContext(): void {
   _ctx = null;
   _ctxPromise = null;
+}
+
+/** Inject a pre-built context — for tests only. */
+export function __setContextForTest(ctx: AppContext): void {
+  _ctx = ctx;
+  _ctxPromise = Promise.resolve(ctx);
 }
