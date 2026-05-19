@@ -20,6 +20,68 @@ working snapshot.
 - DynamoDB AuditSink (persistent audit log)
 - Real LangChain agent demo with OpenAI / Anthropic API key
 
+## [0.5.1] · 2026-05-19 — **Layer 1: Strands Plugin (Python)**
+
+> **Headline**: Second Layer 1 framework adapter — `openagentpay-strands` —
+> lets AWS Strands Agents (Python) make payments via OpenAgentPay's HTTP API.
+> Strands SDK is an OPTIONAL dependency: the package works as a plain async
+> function without it, and decorates with @tool when Strands is installed.
+
+### Added — `openagentpay-strands` Python package (`packages/strands-plugin/`)
+
+- `OpenAgentPayClient` — async HTTP client for the demo-api
+  - `pay()` with auto session lifecycle (lazy create + 404 recovery)
+  - `list_wallets()`, `get_governance()` for inspection
+  - Per-instance session affinity counter for tests
+  - 30s timeout default, 5s session expiry buffer
+- `create_payment_tool()` factory
+  - Returns async callable; if Strands SDK installed, also decorates with @tool
+  - Custom `name` parameter for multi-tool agents
+  - Errors converted to JSON for LLM (never raises to caller)
+- `PaymentResult` dataclass with `to_dict()` LLM-friendly output
+- `OpenAgentPayError` with structured `code` + `http_status`
+- 23 pytest tests covering:
+  - PaymentResult/Error shapes
+  - HTTP client list_wallets / get_governance / pay
+  - Session lazy creation + 404 recovery
+  - Governance deny path returns PaymentResult (not exception)
+  - 5xx HTTP raises
+  - Validation errors (negative amount, empty fields)
+  - Tool factory + JSON output
+  - Tool error handling (HTTP / validation / governance all → JSON)
+
+### Added — `scripts/strands-demo.py`
+
+- Live demo against production CloudFront with 3 scenarios:
+  1. Coinbase CDP payment → real Base Sepolia tx
+  2. HashKey Chain payment → real HashKey tx
+  3. Over-budget (00) → policy_denied
+- Verified tx (this release):
+  - Base Sepolia: [`0xa26f99b8…`](https://sepolia.basescan.org/tx/0xa26f99b8a64577e5254510ff56d777596da38e218f69186598a65592edda15e0)
+  - HashKey: [`0x229995d9…`](https://testnet-explorer.hsk.xyz/tx/0x229995d90ce7e7b1198d0a8709919fc82cbbd5c95d0f0c8ab8a927eae3b8df71)
+
+### Test totals
+
+```
+TypeScript: 157 passed
+Python:      23 passed (strands-plugin)
+─────────────────────────────────────
+Grand total: 180 passed
+```
+
+E2E smoke (12 steps) against production: 12/12 ✅
+
+### 5-Layer Architecture (post v0.5.1)
+
+| Layer | Components | Status |
+|---|---|---|
+| **L1 Framework Plugin** | langchain-plugin (TS) · **strands-plugin (Py)** | ✅ × 2 |
+| L2 PaymentManager | core | ✅ |
+| L3 ProtocolAdapter | protocol-cex-pay | ✅ |
+| L4 WalletConnector | wallet-{hashkey, coinbase-cdp, binance} | ✅ |
+| L5 Settlement | chain RPC + CEX API | ✅ |
+
+
 ## [0.5.0] · 2026-05-19 — **Layer 1: LangChain Plugin**
 
 > **Headline**: OpenAgentPay now ships **Layer 1 framework integration** — the

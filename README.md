@@ -7,7 +7,7 @@
 [![Made for](https://img.shields.io/badge/Made_for-AWS_Bedrock_AgentCore-FF9900)](https://aws.amazon.com/bedrock/agentcore/)
 [![HashKey Chain](https://img.shields.io/badge/Live_on-HashKey_Chain_Testnet-purple)](https://testnet-explorer.hsk.xyz/address/0x0685C487Df4Cc0723Aa828C299686798294E9803)
 [![Coinbase CDP](https://img.shields.io/badge/Live_on-Coinbase_CDP_+_Base_Sepolia-blue)](https://sepolia.basescan.org/address/0x851C03756D5e9e057cb518C1B3cd47f628a0Dca7)
-[![Tests](https://img.shields.io/badge/tests-157_passing-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-180_passing-brightgreen)](#)
 [![Guardrail](https://img.shields.io/badge/Guardrail-7--Layer-orange)](./packages/governance/)
 
 > **🌐 Live demo**: https://d1p7yxa99nxaye.cloudfront.net （已部署到 AWS us-east-1，CloudFront + Lambda + Secrets Manager）
@@ -164,7 +164,8 @@ openagentpay/
 │   ├── wallet-hashkey/             # HashKey Chain Connector (x402, EVM) ⭐
 │   ├── wallet-coinbase-cdp/        # Coinbase CDP Connector (x402, Base Sepolia) ⭐
 │   ├── governance/                 # 7-Layer Guardrail: Policy + Compliance + Audit ⭐
-│   ├── langchain-plugin/           # LangChain Tool — Layer 1 framework plugin ⭐ NEW
+│   ├── langchain-plugin/           # LangChain Tool — Layer 1 framework plugin ⭐
+│   ├── strands-plugin/             # Strands plugin (Python) — Layer 1 framework plugin ⭐ NEW
 │   ├── protocol-cex-pay/           # OAP-CEX Protocol Adapter (24-page IETF-style spec)
 │   ├── strands-plugin/             # Strands Plugin (Python, planned)
 │   ├── cdk-deploy/                 # AWS CDK Infrastructure
