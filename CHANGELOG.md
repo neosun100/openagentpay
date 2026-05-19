@@ -17,6 +17,103 @@ working snapshot.
 - LangChain plugin (Layer 1 framework extension)
 - Solana Pay protocol adapter (non-EVM path)
 - More EVM connectors (MetaMask, WalletConnect, Rabby, Safe)
+- DynamoDB AuditSink (persistent audit log)
+- Real LangChain agent demo with OpenAI / Anthropic API key
+
+## [0.5.0] · 2026-05-19 — **Layer 1: LangChain Plugin**
+
+> **Headline**: OpenAgentPay now ships **Layer 1 framework integration** — the
+> 5-layer architecture is complete. Any LangChain agent (OpenAI Functions /
+> Anthropic / Bedrock / etc.) can autonomously make payments by calling
+> a single `StructuredTool`.
+
+### Added — `@openagentpay/langchain-plugin` package
+
+- **OpenAgentPayTool** extending `@langchain/core` `StructuredTool`
+  - Returns JSON string back to LLM (parseable, structured)
+  - Built-in zod schema (amountUsd, recipient, reason, walletProvider?)
+  - Description tells LLM exactly when and how to use it
+- **createPaymentTool(cfg)** factory — preferred public API
+- Lazy session creation + auto-renewal on expiry
+- Optional governance integration — preCheck before signing, audit after
+- Pluggable hooks: `resolveProtocolForWallet`, `toMoney`, `toAsset`,
+  `generateNonce`, `now` (for tests), `recentPayments` buffer
+- 23 unit tests covering metadata, schema validation, happy path,
+  governance deny paths, session lifecycle, _call (LangChain invocation),
+  error handling, recentPayments buffer
+
+### Added — Live demo script
+
+- `scripts/langchain-demo.ts` — exercises full plugin against HashKey Chain
+  Testnet with 3 scenarios:
+  1. Allowed payment → real on-chain tx
+  2. Over-budget payment → policy_denied
+  3. Sanctioned recipient → compliance denied
+- All 6 audit events recorded as expected
+- Demo-verified tx: [`0xf94385c2…`](https://testnet-explorer.hsk.xyz/tx/0xf94385c2d7f8cf6ba1e0122693ac9875e103988ad4aa51ce57a1ed30fe6e97bb)
+
+### 5-Layer architecture status (post v0.5.0)
+
+| Layer | Component | Status |
+|---|---|---|
+| **L1 Framework Plugin** | `@openagentpay/langchain-plugin` | ✅ NEW v0.5.0 |
+| L2 PaymentManager | `@openagentpay/core` | ✅ |
+| L3 ProtocolAdapter | `@openagentpay/protocol-cex-pay` | ✅ |
+| L4 WalletConnector | wallet-hashkey, wallet-coinbase-cdp, wallet-binance | ✅ |
+| L5 Settlement | chain RPC, CEX API | ✅ |
+
+### Test results
+
+```
+@openagentpay/core              21 passed
+@openagentpay/governance        23 passed
+@openagentpay/protocol-cex-pay  18 passed
+@openagentpay/wallet-hashkey    23 passed
+@openagentpay/wallet-coinbase-cdp 11 passed
+@openagentpay/wallet-binance    20 passed
+@openagentpay/langchain-plugin  23 passed   ← NEW
+demo-api                        18 passed
+─────────────────────────────────────────
+Total                          157 passed
+```
+
+E2E smoke (12 steps) against production: 12/12 ✅
+
+## [0.4.2] · 2026-05-19 — **Test Coverage Hardening**
+
+Pre-Layer-1-extension hardening release. Locks in current behavior with
+comprehensive test coverage before adding the LangChain plugin.
+
+### Added
+
+- **demo-api integration tests** (18 new tests, total 134 across monorepo)
+  - `tests/fixtures/mock-context.ts`: mock connectors that record every call
+  - `tests/integration.test.ts`: 7 describe blocks
+- **scripts/smoke-e2e.ts**: automated e2e against any deployment URL
+  - `pnpm smoke:e2e` (local) / `pnpm smoke:e2e:prod` (CloudFront)
+  - 12-step pipeline including real on-chain payments
+- New test API: `__setContextForTest()` for context injection
+
+### Fixed
+
+- **Real production bug**: `RECENT[]` payment cache was a module-level
+  mutable array, leaking state across tests AND across Lambda warm
+  invocations. Moved to `ctx.recentPayments`. Verified deployed to production.
+
+## [0.4.1] · 2026-05-19 — **Guardrail Dashboard Tab + Architecture Diagram**
+
+Patch release surfacing the 7-Layer Guardrail across UI, docs, and an
+SVG architecture diagram.
+
+### Added
+
+- **demo-web 4th tab** (`GuardrailTab.tsx`): 7-layer stack visualization,
+  Try-It buttons, real-time audit log auto-refreshing every 3s
+- **SVG architecture diagram** (`svg/guardrail-7-layers.svg`): vertical
+  600x920 layout. Hosted on CDN.
+- **`docs/GOVERNANCE.md`** (380 lines): per-layer deep dive with code
+  examples and AgentCore Payments comparison
+
 
 ## [0.4.0] · 2026-05-19 — **Governance: 7-Layer Guardrail**
 

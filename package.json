@@ -63,6 +63,7 @@
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.49.2",
     "@openagentpay/wallet-coinbase-cdp": "workspace:*",
-    "@openagentpay/governance": "workspace:*"
+    "@openagentpay/governance": "workspace:*",
+    "@openagentpay/langchain-plugin": "workspace:*"
   }
 }
