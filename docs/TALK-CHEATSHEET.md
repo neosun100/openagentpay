@@ -10,7 +10,7 @@
 
 ```bash
 # 1. 打开 PPT
-open ~/Code/openagentpay/docs/ppt/openagentpay-talk.pptx
+open ~/Code/openAgentPay/docs/ppt/openagentpay-talk.pptx
 
 # 2. 拿到现场链上数据（讲台用，比 PPT 写死的数字更新鲜）
 # HSK gas 余额

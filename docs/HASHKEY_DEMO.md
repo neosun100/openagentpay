@@ -9,7 +9,7 @@
 3 个脚本，5 分钟跑通 x402 / EIP-3009 完整链路。**真上链，Blockscout 可查**。
 
 ```bash
-cd ~/Code/openagentpay/scripts/hashkey
+cd ~/Code/openAgentPay/scripts/hashkey
 
 # 1. 编译合约（已做过，可跳过）
 solc --bin --abi --optimize -o build --overwrite MockUSDC.sol
@@ -81,7 +81,7 @@ Block Explorer:   https://testnet-explorer.hsk.xyz
 ## 3. 文件结构
 
 ```
-~/Code/openagentpay/scripts/hashkey/
+~/Code/openAgentPay/scripts/hashkey/
 ├── MockUSDC.sol            # 164 行 Solidity，零外部依赖，含完整 EIP-3009
 ├── build/
 │   ├── MockUSDC.bin        # solc 编译产物（bytecode, 7828 chars hex）

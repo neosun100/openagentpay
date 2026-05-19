@@ -198,7 +198,7 @@ https://yxhi4anykqinsxszhyi4z5icdq0usfmv.lambda-url.us-east-1.on.aws/api/health
 
 演讲前 30 分钟跑一次：
 ```bash
-cd ~/Code/openagentpay
+cd ~/Code/openAgentPay
 bash scripts/check-demo.sh
 ```
 

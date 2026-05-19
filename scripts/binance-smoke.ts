@@ -115,7 +115,7 @@ async function main(): Promise<void> {
   if (!apiKey || !apiSecret || !merchantId) {
     console.error(colors.red("\n❌ Missing required env variables.\n"));
     console.error("Please populate one of:");
-    console.error("  • " + colors.cyan("~/Code/openagentpay/.env.local"));
+    console.error("  • " + colors.cyan("~/Code/openAgentPay/.env.local"));
     console.error("  • environment variables exported in your shell\n");
     console.error("With these keys:");
     console.error(colors.dim(`
