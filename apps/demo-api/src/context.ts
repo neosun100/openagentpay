@@ -45,9 +45,11 @@ import {
   InMemoryPolicyEngine,
   StaticSanctionsChecker,
   DEMO_SANCTIONS_LIST,
+  DynamoDBAuditSink,
   velocityLimit,
   amountThreshold,
   type AuditEvent,
+  type AuditSink,
 } from "@openagentpay/governance";
 
 // ----------------------------------------------------------------------------
@@ -146,6 +148,8 @@ export interface AppContext {
   readonly governance: GovernanceManager;
   /** Underlying audit sink — exposed so the API can list recent events. */
   readonly auditSink: InMemoryAuditSink;
+  /** Optional DynamoDB persistent sink — set when AUDIT_TABLE_NAME env var present. */
+  readonly dynamoSink?: DynamoDBAuditSink;
   /** Active policies — exposed so the API can describe what's enforced. */
   readonly policyDescriptions: ReadonlyArray<{ readonly name: string }>;
   /** Recent payments cache — used by velocity policies for sliding-window lookback. */
@@ -343,7 +347,44 @@ async function _buildContext(): Promise<AppContext> {
 
   const complianceChecker = new StaticSanctionsChecker([DEMO_SANCTIONS_LIST]);
 
-  const auditSink = new InMemoryAuditSink(500); // keep last 500 events
+  // -------------------------------------------------------------------------
+  //  Layer 7 audit sink — DynamoDB in production, InMemory locally.
+  //  We keep an InMemoryAuditSink reference too, so /api/governance can show
+  //  recent events from a fast in-process buffer without DynamoDB read costs.
+  // -------------------------------------------------------------------------
+  const auditTableName = process.env["AUDIT_TABLE_NAME"];
+  const inMemoryAuditSink = new InMemoryAuditSink(500);
+  let auditSink: AuditSink = inMemoryAuditSink;
+  let dynamoSink: DynamoDBAuditSink | undefined;
+  if (auditTableName) {
+    try {
+      const { DynamoDBClient } = await import("@aws-sdk/client-dynamodb");
+      const { DynamoDBDocumentClient } = await import("@aws-sdk/lib-dynamodb");
+      const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+      dynamoSink = new DynamoDBAuditSink({
+        tableName: auditTableName,
+        client: docClient,
+      });
+      // Composite sink: write to BOTH (DynamoDB durable + in-memory hot path).
+      auditSink = {
+        async emit(event: AuditEvent) {
+          inMemoryAuditSink.emit(event);
+          try {
+            await dynamoSink!.emit(event);
+          } catch (err) {
+            // Audit failure shouldn't kill the request — log and continue
+            console.error("[audit] DynamoDB emit failed:", err);
+          }
+        },
+      };
+      console.log(
+        `[audit] DynamoDB persistence enabled (table=${auditTableName})`
+      );
+    } catch (err) {
+      console.warn("[audit] DynamoDB sink disabled:", err);
+    }
+  }
+
   const governance = new GovernanceManager({
     policyEngine,
     complianceChecker,
@@ -359,7 +400,8 @@ async function _buildContext(): Promise<AppContext> {
     connectors,
     defaultProvider,
     governance,
-    auditSink,
+    auditSink: inMemoryAuditSink,
+    ...(dynamoSink ? { dynamoSink } : {}),
     policyDescriptions,
     recentPayments: [],
   };

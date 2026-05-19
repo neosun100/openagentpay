@@ -20,6 +20,99 @@ working snapshot.
 - DynamoDB AuditSink (persistent audit log)
 - Real LangChain agent demo with OpenAI / Anthropic API key
 
+## [0.6.0] · 2026-05-20 — **Layer 7 Persistence: DynamoDB AuditSink**
+
+> **Headline**: Audit log now persists to DynamoDB in production. Every
+> governance decision (policy_check, compliance_check, payment_success/failure)
+> survives Lambda cold starts. Queryable by actor, by kind, or by timestamp range.
+
+### Added — `@openagentpay/governance` DynamoDBAuditSink
+
+- New `DynamoDBAuditSink` class implementing `AuditSink`
+  - Append-only PutItem with conditional non-existence check
+  - Pluggable command factories (real SDK in production, mocks in tests)
+  - 22 new unit tests (45 total in governance package)
+- Three query methods:
+  - `queryByActor()` — partition-key query, optional time-range filter
+  - `queryByKind()` — uses byKind GSI (e.g., all policy_denied events)
+  - `getByEventId()` — single-event lookup via byEventId GSI
+- All complex fields (policyEvaluations, complianceCheck, metadata)
+  JSON-serialized for clean DynamoDB storage; deserialized on read
+- Tolerant of malformed JSON in stored fields (no exceptions)
+- @aws-sdk peer dependency (optional) — package works without it for non-DynamoDB users
+
+### Added — CDK infrastructure
+
+- New DynamoDB table `openagentpay-audit-log`
+  - PK: actor (S), SK: timestampEventId (S)
+  - GSI byKind (kind, timestamp), GSI byEventId (eventId)
+  - On-demand billing, point-in-time recovery, optional TTL
+- Lambda IAM auto-grant: `grantReadWriteData(apiFn)`
+- Env var `AUDIT_TABLE_NAME` set automatically by CDK
+
+### Added — demo-api integration
+
+- `apps/demo-api/src/context.ts` lazily creates DynamoDBAuditSink when
+  `AUDIT_TABLE_NAME` env var present (Lambda mode)
+- Composite sink: writes to BOTH DynamoDB (durable) + InMemory (hot path)
+  for fast `/api/governance` reads without DynamoDB read costs
+- Audit emit failures are logged but never fail the request (graceful degradation)
+- New endpoint `GET /api/governance/audit`
+  - `?actor=...` → DynamoDB primary key query
+  - `?kind=...` → DynamoDB byKind GSI query
+  - `?since=ISO8601&limit=N&cursor=...` → time range + pagination
+  - Falls back to in-memory buffer when no actor/kind specified
+  - Response includes `source: 'dynamodb' | 'in-memory'` for transparency
+- 4 new integration tests (22 total in demo-api package)
+
+### Production verification (live)
+
+```
+$ pnpm smoke:e2e:prod
+🎉 All e2e smoke tests passed!
+
+$ aws dynamodb scan --table-name openagentpay-audit-log
+9 events persisted
+  - policy_check     allowed/denied
+  - compliance_check allowed/denied
+  - payment_success  with real tx hashes (HashKey + Base Sepolia)
+
+$ curl 'https://d1p7yxa99nxaye.cloudfront.net/api/governance/audit?actor=demo-user'
+source=dynamodb, events=3   ✅
+
+$ curl 'https://d1p7yxa99nxaye.cloudfront.net/api/governance/audit?kind=payment_success'
+source=dynamodb, events=2 with real tx hashes   ✅
+```
+
+### 7-Layer Guardrail status (post v0.6.0)
+
+| # | Layer | Implementation | Persisted |
+|---|---|---|---|
+| 2 | Session | core/SessionManager (in-memory) | ❌ planned |
+| 3 | Policy | governance/PolicyEngine | ✅ stateless |
+| 5 | Compliance | governance/ComplianceChecker | ✅ stateless |
+| 7 | **Audit** | governance/DynamoDBAuditSink | ✅ **NEW** persistent |
+
+### Test results
+
+```
+@openagentpay/core              21 passed
+@openagentpay/governance        45 passed (was 23, +22 dynamodb-sink)
+@openagentpay/protocol-cex-pay  18 passed
+@openagentpay/wallet-hashkey    23 passed
+@openagentpay/wallet-coinbase-cdp 11 passed
+@openagentpay/wallet-binance    20 passed
+@openagentpay/langchain-plugin  23 passed
+demo-api                        22 passed (was 18, +4 audit query)
+TypeScript subtotal            183 passed
+Python (strands-plugin)         23 passed
+─────────────────────────────────────
+Grand total                    206 passed
+```
+
+E2E smoke (12 steps) against production: 12/12 ✅
+
+
 ## [0.5.1] · 2026-05-19 — **Layer 1: Strands Plugin (Python)**
 
 > **Headline**: Second Layer 1 framework adapter — `openagentpay-strands` —

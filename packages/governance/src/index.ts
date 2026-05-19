@@ -54,6 +54,15 @@ export {
 } from "./audit.js";
 export type { AuditEvent, AuditEventKind, AuditSink } from "./audit.js";
 
+// DynamoDB sink (Layer 7 production persistence — peer dep on @aws-sdk)
+export { DynamoDBAuditSink } from "./dynamodb-sink.js";
+export type {
+  DynamoDBAuditSinkConfig,
+  DynamoDBDocClientLike,
+  CommandFactories,
+  AuditQueryResult,
+} from "./dynamodb-sink.js";
+
 // Top-level facade
 export { GovernanceManager } from "./manager.js";
 export type {

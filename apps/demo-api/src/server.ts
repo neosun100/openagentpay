@@ -21,6 +21,7 @@ import {
   getWalletStatus,
   listWallets,
   processPayment,
+  queryAudit,
   type ApiError,
 } from "./handlers.js";
 import { context, ensureContext } from "./context.js";
@@ -88,6 +89,30 @@ app.get("/api/wallet", async (req: Request, res: Response) => {
 app.get("/api/governance", async (_req: Request, res: Response) => {
   try {
     const data = await getGovernanceStatus();
+    res.json(data);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// ----------------------------------------------------------------------------
+//  GET /api/governance/audit?actor=...&kind=...&since=...&limit=...
+//  Persistent audit query (DynamoDB if configured, else in-memory)
+// ----------------------------------------------------------------------------
+app.get("/api/governance/audit", async (req: Request, res: Response) => {
+  try {
+    const params = {
+      ...(req.query["actor"] ? { actor: String(req.query["actor"]) } : {}),
+      ...(req.query["kind"] ? { kind: String(req.query["kind"]) } : {}),
+      ...(req.query["since"] ? { since: String(req.query["since"]) } : {}),
+      ...(req.query["limit"]
+        ? { limit: Number(req.query["limit"]) }
+        : {}),
+      ...(req.query["cursor"]
+        ? { cursor: String(req.query["cursor"]) }
+        : {}),
+    };
+    const data = await queryAudit(params);
     res.json(data);
   } catch (err) {
     handleError(res, err);

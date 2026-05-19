@@ -112,6 +112,80 @@ export async function getGovernanceStatus(
 }
 
 // ============================================================================
+//  GET /api/governance/audit — query persisted audit log (DynamoDB)
+// ============================================================================
+
+export interface AuditQueryParams {
+  readonly actor?: string;
+  readonly kind?: string;
+  readonly since?: string;
+  readonly limit?: number;
+  readonly cursor?: string;
+}
+
+export interface AuditQueryResponse {
+  readonly events: ReadonlyArray<unknown>;
+  readonly nextCursor?: string;
+  readonly source: "dynamodb" | "in-memory";
+  readonly note?: string;
+}
+
+export async function queryAudit(
+  params: AuditQueryParams,
+  ctx: AppContext = context()
+): Promise<AuditQueryResponse> {
+  // If DynamoDB sink is configured, use persistent log
+  if (ctx.dynamoSink) {
+    if (params.kind) {
+      const r = await ctx.dynamoSink.queryByKind({
+        kind: params.kind,
+        ...(params.since !== undefined ? { since: params.since } : {}),
+        ...(params.limit !== undefined ? { limit: params.limit } : {}),
+        ...(params.cursor !== undefined ? { cursor: params.cursor } : {}),
+      });
+      return {
+        events: r.events,
+        ...(r.nextCursor !== undefined ? { nextCursor: r.nextCursor } : {}),
+        source: "dynamodb",
+      };
+    }
+    if (params.actor) {
+      const r = await ctx.dynamoSink.queryByActor({
+        actor: params.actor,
+        ...(params.since !== undefined ? { since: params.since } : {}),
+        ...(params.limit !== undefined ? { limit: params.limit } : {}),
+        ...(params.cursor !== undefined ? { cursor: params.cursor } : {}),
+      });
+      return {
+        events: r.events,
+        ...(r.nextCursor !== undefined ? { nextCursor: r.nextCursor } : {}),
+        source: "dynamodb",
+      };
+    }
+    // No actor/kind → fall through to in-memory (DynamoDB needs a partition key)
+  }
+
+  // Fallback: filter in-memory buffer
+  const all = ctx.auditSink.readAll();
+  const filtered = all.filter((e) => {
+    if (params.actor && e.actor !== params.actor) return false;
+    if (params.kind && e.kind !== params.kind) return false;
+    if (params.since && e.timestamp < params.since) return false;
+    return true;
+  });
+  const limited = params.limit ? filtered.slice(-params.limit) : filtered;
+  return {
+    events: limited,
+    source: "in-memory",
+    ...(ctx.dynamoSink
+      ? {}
+      : {
+          note: "DynamoDB sink not configured — using in-memory buffer only",
+        }),
+  };
+}
+
+// ============================================================================
 //  Common types
 // ============================================================================
 

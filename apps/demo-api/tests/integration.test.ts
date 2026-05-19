@@ -20,6 +20,7 @@ import {
   getWalletStatus,
   listWallets,
   processPayment,
+  queryAudit,
 } from "../src/handlers.js";
 import { buildMockContext, TORNADO_CASH_ADDRESS } from "./fixtures/mock-context.js";
 import type { SessionId } from "@openagentpay/core";
@@ -292,5 +293,65 @@ describe("demo-api · governance status", () => {
     });
     const after = (await getGovernanceStatus()).auditCount;
     expect(after).toBeGreaterThan(before);
+  });
+});
+
+describe("demo-api · audit query (in-memory fallback)", () => {
+  beforeEach(() => {
+    const { ctx } = buildMockContext();
+    __setContextForTest(ctx);
+  });
+  afterEach(() => _resetContext());
+
+  it("queryAudit returns events from in-memory sink when no DynamoDB configured", async () => {
+    const session = await createSession({ budgetUsd: 1, expiryMinutes: 10 });
+    await processPayment({
+      sessionId: session.sessionId,
+      amountUsdc: 0.001,
+      walletProvider: "coinbase-cdp",
+    });
+    const r = await queryAudit({});
+    expect(r.source).toBe("in-memory");
+    expect(r.events.length).toBeGreaterThan(0);
+    expect(r.note).toMatch(/DynamoDB sink not configured/);
+  });
+
+  it("filters by kind", async () => {
+    const session = await createSession({ budgetUsd: 1, expiryMinutes: 10 });
+    await processPayment({
+      sessionId: session.sessionId,
+      amountUsdc: 0.001,
+      walletProvider: "coinbase-cdp",
+    });
+    const r = await queryAudit({ kind: "payment_success" });
+    expect(r.events.length).toBe(1);
+  });
+
+  it("filters by actor", async () => {
+    const session = await createSession({ budgetUsd: 1, expiryMinutes: 10 });
+    await processPayment({
+      sessionId: session.sessionId,
+      amountUsdc: 0.001,
+      walletProvider: "coinbase-cdp",
+    });
+    // demo-user is the default actor
+    const r = await queryAudit({ actor: "demo-user" });
+    expect(r.events.length).toBeGreaterThan(0);
+
+    const empty = await queryAudit({ actor: "nonexistent" });
+    expect(empty.events.length).toBe(0);
+  });
+
+  it("limit caps the returned events", async () => {
+    const session = await createSession({ budgetUsd: 1, expiryMinutes: 10 });
+    for (let i = 0; i < 3; i++) {
+      await processPayment({
+        sessionId: session.sessionId,
+        amountUsdc: 0.001,
+        walletProvider: "coinbase-cdp",
+      });
+    }
+    const r = await queryAudit({ limit: 2 });
+    expect(r.events.length).toBe(2);
   });
 });

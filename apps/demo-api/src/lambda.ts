@@ -32,6 +32,7 @@ import {
   getWalletStatus,
   listWallets,
   processPayment,
+  queryAudit,
   type ApiError,
 } from "./handlers.js";
 import { _resetContext, ensureContext } from "./context.js";
@@ -107,6 +108,20 @@ export async function handler(
     // GET /api/governance — policies + audit log
     if (method === "GET" && path === "/api/governance") {
       const data = await getGovernanceStatus();
+      return jsonResponse(data);
+    }
+
+    // GET /api/governance/audit?actor=...&kind=...&since=...&limit=...
+    if (method === "GET" && path === "/api/governance/audit") {
+      const q = event.queryStringParameters ?? {};
+      const params = {
+        ...(q["actor"] ? { actor: q["actor"] } : {}),
+        ...(q["kind"] ? { kind: q["kind"] } : {}),
+        ...(q["since"] ? { since: q["since"] } : {}),
+        ...(q["limit"] ? { limit: Number(q["limit"]) } : {}),
+        ...(q["cursor"] ? { cursor: q["cursor"] } : {}),
+      };
+      const data = await queryAudit(params);
       return jsonResponse(data);
     }
 

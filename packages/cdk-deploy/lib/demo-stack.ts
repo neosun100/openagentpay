@@ -19,6 +19,7 @@ import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as cdk from "aws-cdk-lib";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -95,6 +96,47 @@ export class DemoStack extends cdk.Stack {
     }
 
     // -------------------------------------------------------------------------
+    //  1.5. DynamoDB — audit log persistence (Layer 7 of 7-Layer Guardrail)
+    // -------------------------------------------------------------------------
+    //
+    //  Schema:
+    //    PK (actor)              S   = userId
+    //    SK (timestampEventId)   S   = "{ISO8601}#{eventId}"
+    //  GSI byKind (PK=kind, SK=timestamp)        — query all events of one kind
+    //  GSI byEventId (PK=eventId)                — single-event lookup
+    //
+    //  PROVISIONED with on-demand billing — scales with audit traffic.
+    //  Point-in-time recovery enabled — SOX/MRM regulators expect 7+ year retention.
+    //  TTL on `expiresAt` attribute — older events auto-purged after 90 days.
+    //  (Production deployments should mirror to S3 / Athena before TTL kicks in.)
+    //
+    const auditTable = new dynamodb.Table(this, "AuditLogTable", {
+      tableName: "openagentpay-audit-log",
+      partitionKey: { name: "actor", type: dynamodb.AttributeType.STRING },
+      sortKey: {
+        name: "timestampEventId",
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // demo only — production: RETAIN
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
+      timeToLiveAttribute: "expiresAt", // optional auto-purge
+    });
+    auditTable.addGlobalSecondaryIndex({
+      indexName: "byKind",
+      partitionKey: { name: "kind", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "timestamp", type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+    auditTable.addGlobalSecondaryIndex({
+      indexName: "byEventId",
+      partitionKey: { name: "eventId", type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // -------------------------------------------------------------------------
     //  2. Lambda Function URL — runs demo-api
     // -------------------------------------------------------------------------
     const apiFn = new NodejsFunction(this, "DemoApiFn", {
@@ -111,6 +153,8 @@ export class DemoStack extends cdk.Stack {
         HASHKEY_TESTNET_AGENT_PRIVATE_KEY_SECRET_ARN: pkSecret.secretArn,
         HASHKEY_USDC_ADDRESS: props.hashkeyUsdcAddress,
         ...(props.hashkeyRpcUrl ? { HASHKEY_RPC_URL: props.hashkeyRpcUrl } : {}),
+        // DynamoDB audit table (Layer 7 persistence)
+        AUDIT_TABLE_NAME: auditTable.tableName,
         // Coinbase CDP — only set if enabled
         ...(cdpEnabled
           ? {
@@ -139,6 +183,9 @@ export class DemoStack extends cdk.Stack {
     pkSecret.grantRead(apiFn);
     if (cdpApiKeySecretRes) cdpApiKeySecretRes.grantRead(apiFn);
     if (cdpWalletSecretRes) cdpWalletSecretRes.grantRead(apiFn);
+
+    // Grant Lambda full read/write access to the audit table
+    auditTable.grantReadWriteData(apiFn);
 
     // -------------------------------------------------------------------------
     //  2. API Gateway HTTP API — public-facing entrypoint to Lambda.
@@ -265,6 +312,7 @@ export class DemoStack extends cdk.Stack {
     new cdk.CfnOutput(this, "BucketName", { value: webBucket.bucketName });
     new cdk.CfnOutput(this, "DistributionId", { value: distribution.distributionId });
     new cdk.CfnOutput(this, "SecretArn", { value: pkSecret.secretArn });
+    new cdk.CfnOutput(this, "AuditTableName", { value: auditTable.tableName });
     if (cdpApiKeySecretRes) {
       new cdk.CfnOutput(this, "CdpApiKeySecretArn", {
         value: cdpApiKeySecretRes.secretArn,
