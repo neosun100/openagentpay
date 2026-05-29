@@ -192,6 +192,9 @@ export class HashKeyChainConnector implements WalletConnector {
   }
 
   async createInstrument(input: CreateInstrumentInput): Promise<Instrument> {
+    if (!input.userId) {
+      throw new Error("createInstrument: userId is required");
+    }
     // Idempotent: same userId → same instrument
     const existing = await this.store.get(input.userId);
     if (existing) return existing;

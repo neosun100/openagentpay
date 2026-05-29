@@ -1,0 +1,31 @@
+{
+  "name": "@openagentpay/wallet-walletconnect",
+  "version": "0.1.0-alpha.0",
+  "description": "WalletConnect v2 connector for OpenAgentPay — works with 200+ EVM mobile wallets via QR / deep-link.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "keywords": ["walletconnect", "wc-v2", "eip-1193", "openagentpay", "x402"],
+  "dependencies": {
+    "@openagentpay/core": "workspace:*",
+    "@openagentpay/wallet-metamask": "workspace:*",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}

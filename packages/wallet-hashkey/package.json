@@ -25,5 +25,10 @@
     "@openagentpay/core": "workspace:*",
     "viem": "^2.21.0"
   },
+  "devDependencies": {
+    "@openagentpay/conformance": "workspace:*",
+    "vitest": "^2.1.0",
+    "typescript": "^5.5.0"
+  },
   "keywords": ["hashkey", "hashkey-chain", "evm", "x402", "eip-3009", "wallet-connector"]
 }

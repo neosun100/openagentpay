@@ -1,0 +1,23 @@
+[project]
+name = "openagentpay-pydantic-ai"
+version = "0.1.0a0"
+description = "PydanticAI tool wrapper for OpenAgentPay — payments tool with Pydantic-typed input/output. Strands/AutoGen/CrewAI sibling."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+dependencies = [
+  "httpx>=0.27.0",
+  "pydantic>=2.6.0",
+]
+
+[project.optional-dependencies]
+ai = ["pydantic-ai>=0.0.10"]
+
+[tool.uv.sources]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["openagentpay_pydantic_ai"]

@@ -1,0 +1,17 @@
+[project]
+name = "openagentpay-semantic-kernel"
+version = "0.1.0a0"
+description = "Microsoft Semantic Kernel plugin for OpenAgentPay — autonomous payments via @kernel_function."
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+readme = "README.md"
+dependencies = [
+    "httpx>=0.27.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["openagentpay_semantic_kernel"]

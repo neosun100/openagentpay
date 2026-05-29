@@ -70,3 +70,39 @@ export type {
   PreCheckInput,
   PreCheckResult,
 } from "./manager.js";
+
+// ----------------------------------------------------------------------------
+//  v0.10 production extensions — checkers, approval, per-agent, jurisdiction
+// ----------------------------------------------------------------------------
+
+// Production compliance checkers
+export { ChainalysisKYTChecker } from "./checkers/chainalysis.js";
+export type { ChainalysisKYTConfig } from "./checkers/chainalysis.js";
+export { TRMLabsChecker } from "./checkers/trm-labs.js";
+export type { TRMLabsConfig } from "./checkers/trm-labs.js";
+export { OFACSdnAutoSyncChecker } from "./checkers/ofac-sdn.js";
+export type { OFACSdnAutoSyncConfig } from "./checkers/ofac-sdn.js";
+
+// Approval workflow (Cobo PACT-inspired)
+export {
+  ApprovalManager,
+  InMemoryApprovalStore,
+} from "./approval/manager.js";
+export type {
+  ApprovalRequest,
+  ApprovalEvent,
+  ApprovalStatus,
+  ApprovalStore,
+  ApprovalManagerConfig,
+} from "./approval/manager.js";
+
+// Per-agent policy bundles
+export { PerAgentPolicyEngine } from "./policy/per-agent.js";
+export type {
+  PerAgentPolicyBundle,
+  PerAgentPolicyEngineConfig,
+} from "./policy/per-agent.js";
+
+// Jurisdiction restriction policy
+export { jurisdictionRestriction } from "./policy/jurisdiction.js";
+export type { JurisdictionRestrictionOptions } from "./policy/jurisdiction.js";
