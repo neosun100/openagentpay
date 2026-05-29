@@ -1,0 +1,39 @@
+{
+  "name": "@openagentpay/protocol-ap2",
+  "version": "0.1.0-alpha.0",
+  "description": "Google AP2 (Agent Payments Protocol) adapter for OpenAgentPay — mandate-based authorization layer that composes with x402 / OAP-CEX / Solana Pay settlement layers.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "doc"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "keywords": [
+    "ap2",
+    "agent-payments",
+    "google",
+    "verifiable-credentials",
+    "mandate",
+    "openagentpay"
+  ],
+  "dependencies": {
+    "@openagentpay/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}

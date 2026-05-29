@@ -1,0 +1,15 @@
+{
+  "name": "@openagentpay/protocol-erc8004",
+  "version": "0.1.0-alpha.0",
+  "description": "ERC-8004 Trustless Agents protocol adapter — on-chain agent identity + reputation registry for OpenAgentPay.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }, "./package.json": "./package.json" },
+  "files": ["dist", "src", "doc"],
+  "scripts": { "build": "tsc", "test": "vitest run", "typecheck": "tsc --noEmit", "clean": "rm -rf dist *.tsbuildinfo" },
+  "keywords": ["erc-8004", "trustless-agents", "ethereum", "a2a", "openagentpay"],
+  "dependencies": { "@openagentpay/core": "workspace:*" },
+  "devDependencies": { "typescript": "^5.5.0", "vitest": "^2.1.0" }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@openagentpay/protocol-virtuals-acp",
+  "version": "0.1.0-alpha.0",
+  "description": "Virtuals Protocol ACP (Agent Commerce Protocol) adapter — 4-phase agent-to-agent commerce on Base.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }, "./package.json": "./package.json" },
+  "files": ["dist", "src"],
+  "scripts": { "build": "tsc", "test": "vitest run", "typecheck": "tsc --noEmit", "clean": "rm -rf dist *.tsbuildinfo" },
+  "keywords": ["virtuals", "acp", "agent-commerce", "base", "openagentpay"],
+  "dependencies": { "@openagentpay/core": "workspace:*" },
+  "devDependencies": { "typescript": "^5.5.0", "vitest": "^2.1.0" }
+}
