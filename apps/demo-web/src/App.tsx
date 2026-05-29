@@ -5,9 +5,10 @@ import { RunDemoTab } from "./RunDemoTab.js";
 import { HowItWorksTab } from "./HowItWorksTab.js";
 import { AiAgentTab } from "./AiAgentTab.js";
 import { GuardrailTab } from "./GuardrailTab.js";
+import { SpendAnalyticsTab } from "./SpendAnalyticsTab.js";
 import { api, type WalletEntry } from "./api.js";
 
-type TabId = "run" | "how" | "agent" | "guardrail";
+type TabId = "run" | "how" | "agent" | "guardrail" | "spend";
 
 /** Roadmap chips — wallets we plan to add but haven't implemented yet. */
 const ROADMAP_WALLETS: ReadonlyArray<{
@@ -179,6 +180,15 @@ export function App() {
             7 层风控可视化
           </div>
         </button>
+        <button
+          className={tab === "spend" ? "active" : ""}
+          onClick={() => setTab("spend")}
+        >
+          Spend 📊
+          <div style={{ fontSize: 11, color: "var(--fg-dim)", marginTop: 2 }}>
+            实时花费分析
+          </div>
+        </button>
         {activeWallet && (
           <div className="tab-status">
             <span className="tab-status-pill">
@@ -203,6 +213,7 @@ export function App() {
         {tab === "guardrail" && (
           <GuardrailTab walletProvider={walletProvider} />
         )}
+        {tab === "spend" && <SpendAnalyticsTab />}
       </main>
 
       <ActivityLog />

@@ -209,4 +209,48 @@ export const api = {
         ? { sessionId, amountUsdc, walletProvider }
         : { sessionId, amountUsdc }
     ),
+  /**
+   * Read audit log for analytics. `since` is ISO 8601; `limit` capped at 200
+   * by the backend. Returns events in insertion order; we filter / aggregate
+   * client-side.
+   */
+  auditQuery: (params: {
+    since?: string;
+    limit?: number;
+    actor?: string;
+    kind?: string;
+  } = {}) => {
+    const q = new URLSearchParams();
+    if (params.since) q.set("since", params.since);
+    if (params.limit !== undefined) q.set("limit", String(params.limit));
+    if (params.actor) q.set("actor", params.actor);
+    if (params.kind) q.set("kind", params.kind);
+    const qs = q.toString();
+    return fetchJson<{
+      source: "dynamodb" | "in-memory";
+      events: ReadonlyArray<AuditEventLite>;
+      cursor?: string;
+    }>("GET", `/api/governance/audit${qs ? `?${qs}` : ""}`);
+  },
 };
+
+// ----------------------------------------------------------------------------
+//  Audit event shape — matches @openagentpay/governance AuditEvent
+// ----------------------------------------------------------------------------
+
+export interface AuditEventLite {
+  eventId: string;
+  timestamp: string;
+  kind: string;
+  actor: string;
+  walletProvider?: string;
+  sessionId?: string;
+  recipient?: string;
+  amountAtomic?: string;
+  currency?: string;
+  chain?: string;
+  txHash?: string;
+  result: "allowed" | "denied" | "succeeded" | "failed";
+  reason?: string;
+  metadata?: Record<string, unknown>;
+}

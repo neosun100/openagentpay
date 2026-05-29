@@ -7,19 +7,32 @@
 [![Made for](https://img.shields.io/badge/Made_for-AWS_Bedrock_AgentCore-FF9900)](https://aws.amazon.com/bedrock/agentcore/)
 [![HashKey Chain](https://img.shields.io/badge/Live_on-HashKey_Chain_Testnet-purple)](https://testnet-explorer.hsk.xyz/address/0x0685C487Df4Cc0723Aa828C299686798294E9803)
 [![Coinbase CDP](https://img.shields.io/badge/Live_on-Coinbase_CDP_+_Base_Sepolia-blue)](https://sepolia.basescan.org/address/0x851C03756D5e9e057cb518C1B3cd47f628a0Dca7)
-[![Tests](https://img.shields.io/badge/tests-230_passing-brightgreen)](#)
-[![Guardrail](https://img.shields.io/badge/Guardrail-7--Layer-orange)](./packages/governance/)
+[![Tests](https://img.shields.io/badge/tests-713_passing-brightgreen)](#)
+[![Wallets](https://img.shields.io/badge/wallets-6_connectors-blue)](#)
+[![Protocols](https://img.shields.io/badge/protocols-18_adapters-purple)](#)
+[![Plugins](https://img.shields.io/badge/agent_frameworks-10_plugins-pink)](#)
+[![Guardrail](https://img.shields.io/badge/Guardrail-7--Layer_+_Approval-orange)](./packages/governance/)
+
+> 👋 **Coming back to this project? Start here:** [`docs/STATE.md`](./docs/STATE.md) — resumable state in 5 minutes. Then [`docs/TODO.md`](./docs/TODO.md) for current sprint, [`docs/ROADMAP.md`](./docs/ROADMAP.md) for the v0.11 → v1.0 arc, and [`docs/WALLET-SIGNUP-PLAN.md`](./docs/WALLET-SIGNUP-PLAN.md) for the wallet sign-up checklist.
+
+> **One-liner**: *LiteLLM let any LLM run with one line of code. **OpenAgentPay lets any AI Agent pay with one line of code.*** See [📋 docs/POSITIONING.md](./docs/POSITIONING.md) for the full strategic framing.
 
 > **🌐 Live demo**: https://d1p7yxa99nxaye.cloudfront.net （已部署到 AWS us-east-1，CloudFront + Lambda + Secrets Manager）
 >
-> **🚀 Path D Hybrid 完成 (2026-05-19)**: OpenAgentPay 现在**同时**支持两个生产级钱包连接器：
-> - 🇭🇰 **HashKey Chain** (亚洲, MockUSDC, 自托管 EVM)
-> - 🇺🇸 **Coinbase CDP** (北美, Circle 官方 USDC, 托管 Base Sepolia)
+> **🚀 v0.8.0 现状 (2026-05-24)** — 5-Layer 架构全部落地：
 >
-> 共享同一个 `WalletConnector` 接口，UI 一键切换，业务代码 0 改动。
-> Framework-agnostic 抽象证明完成。详见 [📋 CHANGELOG](./CHANGELOG.md) ·
+> | Layer | 内容 | 数量 |
+> |---|---|---|
+> | **L1 Framework Plugin** | langchain · llamaindex · mastra · strands · autogen · crewai · semantic-kernel | **7** |
+> | **L2 PaymentManager + Governance** | core (InMemory + DynamoDB) · 7-Layer Guardrail | ✅ |
+> | **L3 ProtocolAdapter** | x402-v1/v2 · cex-pay · ap2 · solana-pay · mpp · l402 · stellar · w3c-payment · sui · aptos · erc8004 · skyfire · virtuals-acp · nevermined | **13** + Router |
+> | **L4 WalletConnector** | hashkey · coinbase-cdp · binance · metamask · walletconnect · solana | **6** |
+> | **L5 Settlement** | EVM RPC · CEX API · Solana RPC | ✅ |
+>
+> Plus: `@openagentpay/proxy` (LiteLLM-Proxy-style multi-tenant HTTP server) and `@openagentpay/conformance` (25-test self-certification suite for new connectors). 详见 [📋 CHANGELOG](./CHANGELOG.md) ·
 > [🔬 HashKey demo](./docs/HASHKEY_DEMO.md) ·
-> [⚡ Quickstart](./docs/QUICKSTART.md)。
+> [⚡ Quickstart](./docs/QUICKSTART.md) ·
+> [🎯 Positioning](./docs/POSITIONING.md)。
 
 ---
 
@@ -50,9 +63,13 @@ pnpm demo
 
 ## ✨ What is OpenAgentPay?
 
-OpenAgentPay 是面向 AI Agent 经济的**开放式支付协议平台**。它在 AWS Bedrock AgentCore Payments (Preview) 之上，提供一套可插拔的 Wallet / Protocol / Governance 三层抽象，让任何钱包、任何协议、任何企业治理逻辑都能即插即用接入。
+OpenAgentPay 是面向 AI Agent 经济的**开放式支付协议平台**——**Crypto Agent Payments 的 LiteLLM**。它在 AWS Bedrock AgentCore Payments (Preview) 之上，提供 5 层可插拔抽象（Framework Plugin / PaymentManager / Protocol / Wallet / Settlement），让任何钱包、任何协议、任何 Agent 框架、任何治理逻辑都能即插即用接入。
 
-**类比**：Kubernetes 之于容器编排（CRI/CSI/CNI 标准化），OpenAgentPay 想做 Agent Payments 的 **CRI 时刻**。
+**两个类比同时成立**：
+- **LiteLLM 之于 LLM 生态**：统一 API + 100+ provider 适配 → 业务代码不改换 model
+- **Kubernetes CRI 之于容器编排**：定义标准接口 → 任何实现都能即插即用
+
+OpenAgentPay 比 LiteLLM 走得更深一步：**同时抽象 provider（钱包）和协议**——因为 crypto payments 同时沿这两个轴碎片化（链上 / CEX / 卡 / 银行）。
 
 ### 解决什么问题？
 
@@ -159,32 +176,54 @@ OpenAgentPay 让你**保留 AgentCore 的 Runtime / Identity / Gateway / Observa
 ```
 openagentpay/
 ├── packages/
-│   ├── core/                       # PaymentManager + types + SessionManager
-│   ├── wallet-binance/             # Binance Pay Connector (OAP-CEX)
-│   ├── wallet-hashkey/             # HashKey Chain Connector (x402, EVM) ⭐
-│   ├── wallet-coinbase-cdp/        # Coinbase CDP Connector (x402, Base Sepolia) ⭐
-│   ├── governance/                 # 7-Layer Guardrail: Policy + Compliance + Audit ⭐
-│   ├── langchain-plugin/           # LangChain Tool — Layer 1 framework plugin ⭐
-│   ├── strands-plugin/             # Strands plugin (Python) — Layer 1 framework plugin ⭐ NEW
-│   ├── protocol-cex-pay/           # OAP-CEX Protocol Adapter (24-page IETF-style spec)
-│   ├── strands-plugin/             # Strands Plugin (Python, planned)
-│   ├── cdk-deploy/                 # AWS CDK Infrastructure
-│   └── python-sdk/                 # Python SDK
+│   ├── core/                       # PaymentManager · SessionManager · ProtocolRouter · types
+│   ├── governance/                 # 7-Layer Guardrail: PolicyEngine + ComplianceChecker + AuditLogger (incl. DynamoDBAuditSink)
+│   ├── proxy/                      # ⭐ NEW v0.9 — LiteLLM-Proxy-style standalone HTTP server (multi-tenant + virtual API keys)
+│   ├── conformance/                # ⭐ NEW v0.9 — WalletConnector + ProtocolAdapter test suite (25 tests, framework-agnostic)
+│   │
+│   ├── wallet-hashkey/             # HashKey Chain (x402, EVM, self-custodial)
+│   ├── wallet-coinbase-cdp/        # Coinbase CDP (x402, Base Sepolia, managed TEE)
+│   ├── wallet-binance/             # Binance Pay (OAP-CEX, HMAC-SHA512)
+│   ├── wallet-metamask/            # MetaMask + EIP-1193 (Rabby/Rainbow/Coinbase Wallet)
+│   ├── wallet-walletconnect/       # WalletConnect v2 → 200+ mobile wallets
+│   ├── wallet-solana/              # Solana Pay (non-EVM, Ed25519)
+│   │
+│   ├── protocol-x402/              # Coinbase x402 v1/v2
+│   ├── protocol-cex-pay/           # OAP-CEX v0.1 (24-page IETF-style spec)
+│   ├── protocol-ap2/               # Google AP2 mandate envelope (W3C VC)
+│   ├── protocol-mpp/               # Stripe + Tempo Merchant Payments Protocol
+│   ├── protocol-l402/              # Lightning Network LSAT
+│   ├── protocol-stellar/           # Stellar SEP-31 cross-border
+│   ├── protocol-w3c-payment/       # W3C Payment Request API + SPC
+│   ├── protocol-sui/               # Sui Move PTB
+│   ├── protocol-aptos/             # Aptos Move
+│   ├── protocol-erc8004/           # Trustless Agents on-chain registry
+│   ├── protocol-skyfire/           # Skyfire KYA agent identity
+│   ├── protocol-virtuals-acp/      # Virtuals 4-phase commerce on Base
+│   ├── protocol-nevermined/        # Nevermined subscription/credit
+│   │
+│   ├── langchain-plugin/           # L1 (TS) — LangChain StructuredTool
+│   ├── llamaindex-plugin/          # L1 (TS) — LlamaIndex FunctionTool
+│   ├── mastra-plugin/              # L1 (TS) — Mastra
+│   ├── strands-plugin/             # L1 (Python) — AWS Strands @tool
+│   ├── autogen-plugin/             # L1 (Python) — Microsoft AutoGen
+│   ├── crewai-plugin/              # L1 (Python) — CrewAI
+│   ├── semantic-kernel-plugin/     # L1 (Python) — Microsoft Semantic Kernel
+│   │
+│   ├── python-sdk/                 # Python types (mirror of TS core)
+│   └── cdk-deploy/                 # AWS CDK: API Gateway + Lambda + DynamoDB + Secrets Manager + CloudFront
+│
 ├── apps/
-│   ├── demo-api/                   # Express server (→ API Gateway → Lambda)
-│   │                               # ↳ Path D Hybrid: routes by walletProvider param
-│   └── demo-web/                   # Vite + React three-tab UI
-│                                   # ↳ Capability bar with live + roadmap chips
-├── scripts/
-│   ├── binance-smoke.ts            # Binance Pay sandbox e2e
-│   ├── hashkey-smoke.ts            # HashKey Chain Testnet e2e (TS)
-│   ├── coinbase-cdp-smoke.ts       # Coinbase CDP + Base Sepolia e2e ⭐ NEW
-│   ├── cdp-ping.ts                 # CDP credential check
-│   └── hashkey/                    # MockUSDC + Python e2e ref impl
+│   ├── demo-api/                   # Express server (local) → API Gateway → Lambda (prod)
+│   └── demo-web/                   # Vite + React 4-tab UI (Run · How · AI Agent · Guardrail)
+├── scripts/                        # smoke tests + Strands/LangChain demos + HashKey ref impl
 └── docs/
+    ├── POSITIONING.md              # ⭐ NEW — Strategic framing as "LiteLLM for Crypto Agent Payments"
     ├── STRATEGY.md                 # 项目北极星文档
+    ├── GOVERNANCE.md               # 7-Layer Guardrail deep dive
     ├── HASHKEY_DEMO.md             # HashKey Chain demo 复现指南
-    └── QUICKSTART.md               # 5 分钟跑通 demo
+    ├── QUICKSTART.md               # 5 分钟跑通 demo
+    └── PRESENTATION.md             # 23-page talk kit
 ```
 
 ---
