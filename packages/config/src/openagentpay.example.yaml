@@ -1,0 +1,143 @@
+# Example openagentpay.yaml
+# Drop this in your repo root and edit. The `oap` CLI reads it for every
+# command. Equivalent to LiteLLM's config.yaml.
+
+version: "1"
+
+deployment:
+  name: production
+  env: prod
+  region: us-east-1
+
+# ----------------------------------------------------------------------------
+# WALLETS — every payment provider you want to enable
+# ----------------------------------------------------------------------------
+wallets:
+  - provider: hashkey
+    name: HashKey Chain Testnet
+    module: "@openagentpay/wallet-hashkey"
+    config:
+      tokenAddress: "0x0685C487Df4Cc0723Aa828C299686798294E9803"
+      chain:
+        id: 133
+        rpcUrl: "https://testnet.hsk.xyz"
+    secrets:
+      privateKey: "aws-secretsmanager://hashkey-prod-pk"
+
+  - provider: coinbase-cdp
+    name: Coinbase CDP (Base Sepolia)
+    module: "@openagentpay/wallet-coinbase-cdp"
+    config:
+      agentAddress: "0x851C03756D5e9e057cb518C1B3cd47f628a0Dca7"
+    secrets:
+      apiKeyId: "aws-secretsmanager://cdp-key-id"
+      apiKeySecret: "aws-secretsmanager://cdp-key-secret"
+      walletSecret: "aws-secretsmanager://cdp-wallet-secret"
+
+  - provider: binance-pay
+    name: Binance Pay (Sandbox)
+    module: "@openagentpay/wallet-binance"
+    config:
+      merchantId: "12345678"
+      sandbox: true
+    secrets:
+      apiKey: "env://BINANCE_PAY_API_KEY"
+      apiSecret: "env://BINANCE_PAY_API_SECRET"
+
+# ----------------------------------------------------------------------------
+# PROTOCOLS — adapters that recognize 402 envelopes
+# ----------------------------------------------------------------------------
+protocols:
+  - id: "x402-v1"
+    module: "@openagentpay/protocol-x402"
+    enabled: true
+  - id: "x402-v2"
+    module: "@openagentpay/protocol-x402"
+    enabled: true
+  - id: "ap2-v0.1"
+    module: "@openagentpay/protocol-ap2"
+    enabled: true
+  - id: "cex-pay-v0.1"
+    module: "@openagentpay/protocol-cex-pay"
+    enabled: true
+  - id: "solana-pay-v1"
+    module: "@openagentpay/wallet-solana"
+    enabled: true
+
+# ----------------------------------------------------------------------------
+# GOVERNANCE — Layer 3 (policy) + Layer 5 (compliance) + Layer 7 (audit)
+# ----------------------------------------------------------------------------
+governance:
+  policies:
+    - kind: amountThreshold
+      maxUsd: 50
+    - kind: velocityLimit
+      windowSeconds: 60
+      maxCount: 20
+    - kind: velocityLimit
+      windowSeconds: 3600
+      maxAmountUsd: 100
+    - kind: timeOfDay
+      startHourUtc: 1
+      endHourUtc: 23
+
+  compliance:
+    checkers:
+      - kind: static-sanctions
+      - kind: chainalysis-kyt
+        secrets:
+          apiKey: "env://CHAINALYSIS_KEY"
+      # - kind: trm-labs        # planned
+      # - kind: ofac-sdn         # planned
+
+  audit:
+    sinks:
+      - kind: console
+      - kind: dynamodb
+        config:
+          tableName: openagentpay-audit-log
+      # - kind: s3-worm           # planned — WORM bucket for SOX/MRM
+      # - kind: opensearch        # planned
+
+# ----------------------------------------------------------------------------
+# ROUTING — wallet selection strategy
+# ----------------------------------------------------------------------------
+routing:
+  strategy: least-cost           # priority | least-cost | least-latency | round-robin | user-affinity
+  fallback:
+    - coinbase-cdp
+    - hashkey
+    - binance-pay
+  retry:
+    maxAttempts: 3
+    backoffMs: [500, 2000, 5000]
+
+# ----------------------------------------------------------------------------
+# TENANTS — multi-tenant API keys + per-tenant limits (proxy server)
+# ----------------------------------------------------------------------------
+tenants:
+  - id: research-agents
+    name: Research Team
+    apiKey: "aws-secretsmanager://oap-key-research"
+    allowedWallets: [coinbase-cdp]
+    dailyBudgetUsd: 100
+    metadata:
+      cost_center: "RND-001"
+      slack: "#research-agents"
+
+  - id: trading-bots
+    name: Trading Bots
+    apiKey: "aws-secretsmanager://oap-key-trading"
+    allowedWallets: [hashkey, coinbase-cdp, binance-pay]
+    dailyBudgetUsd: 1000
+    requireTwoPersonApprovalAboveUsd: 500
+    sandboxOnly: false
+    metadata:
+      cost_center: "TRD-042"
+
+  - id: dev-sandbox
+    name: Dev Sandbox
+    apiKey: "env://OAP_KEY_DEV"
+    allowedWallets: []           # all wallets
+    dailyBudgetUsd: 10
+    sandboxOnly: true

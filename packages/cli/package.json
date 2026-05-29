@@ -1,0 +1,38 @@
+{
+  "name": "@openagentpay/cli",
+  "version": "0.1.0-alpha.0",
+  "description": "`oap` CLI for OpenAgentPay — config validation, conformance runner, doctor, proxy launcher. The LiteLLM CLI equivalent.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "oap": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "dev": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*",
+    "@openagentpay/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9"
+  },
+  "keywords": ["openagentpay", "cli", "oap", "agent-payments", "litellm"]
+}

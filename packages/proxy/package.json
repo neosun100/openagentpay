@@ -1,0 +1,57 @@
+{
+  "name": "@openagentpay/proxy",
+  "version": "0.1.0-alpha.0",
+  "description": "Standalone HTTP proxy server for OpenAgentPay — multi-tenant, virtual-API-key-gated, language-agnostic. The LiteLLM Proxy equivalent for Crypto Agent Payments.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "oap-proxy": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./tenant": {
+      "import": "./dist/tenant.js",
+      "types": "./dist/tenant.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "dev": "tsx watch src/cli.ts",
+    "start": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*",
+    "@openagentpay/governance": "workspace:*",
+    "@openagentpay/config": "workspace:*",
+    "express": "^4.21.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.0.0",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9"
+  },
+  "keywords": [
+    "openagentpay",
+    "proxy",
+    "litellm",
+    "agent-payments",
+    "multi-tenant",
+    "x402"
+  ]
+}

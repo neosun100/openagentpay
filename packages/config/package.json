@@ -1,0 +1,44 @@
+{
+  "name": "@openagentpay/config",
+  "version": "0.1.0-alpha.0",
+  "description": "Declarative openagentpay.yaml schema + loader + validator. The LiteLLM config.yaml equivalent — declare wallets / protocols / policies / tenants without writing code.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schema": {
+      "import": "./dist/schema.js",
+      "types": "./dist/schema.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*",
+    "yaml": "^2.5.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9"
+  },
+  "keywords": [
+    "openagentpay",
+    "config",
+    "yaml",
+    "litellm",
+    "declarative"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "@openagentpay/conformance",
+  "version": "0.1.0-alpha.0",
+  "description": "Conformance test suite for OpenAgentPay WalletConnector + ProtocolAdapter implementations. Third-party connector authors run these to self-certify.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./wallet": {
+      "import": "./dist/wallet.js",
+      "types": "./dist/wallet.d.ts"
+    },
+    "./protocol": {
+      "import": "./dist/protocol.js",
+      "types": "./dist/protocol.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@openagentpay/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9"
+  },
+  "keywords": [
+    "openagentpay",
+    "conformance",
+    "test-suite",
+    "wallet-connector",
+    "protocol-adapter"
+  ]
+}

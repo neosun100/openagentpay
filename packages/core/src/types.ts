@@ -188,6 +188,15 @@ export interface PaymentRequest {
   readonly rawPayload: unknown;
   /** Description / reason — surfaces in audit log. */
   readonly description?: string;
+  /**
+   * Optional AP2 mandate envelope. Carried orthogonally to the settlement
+   * payload — wallet connectors ignore mandates, ProtocolAdapters validate
+   * + log them, ComplianceCheckers may inspect them.
+   *
+   * Mandates compose with ANY settlement protocol (x402, OAP-CEX, AP2-x402,
+   * Solana Pay, ...) — that's the whole point of AP2 being orthogonal.
+   */
+  readonly mandates?: ReadonlyArray<Mandate>;
 }
 
 /**
@@ -427,6 +436,139 @@ export interface OpenAgentPayRuntimeConfig {
   readonly userId: UserId;
   /** Fully-qualified Lambda Function URL of the Payment Manager backend. */
   readonly paymentManagerEndpoint: string;
+}
+
+// ============================================================================
+//  AP2 Mandate Layer (Authorization Envelope)
+// ============================================================================
+//
+//  AP2 (Google Agent Payments Protocol) introduces a *mandate-based* trust
+//  model orthogonal to settlement protocols (x402 / OAP-CEX). Mandates are
+//  W3C Verifiable Credentials that travel ALONGSIDE a settlement payload:
+//
+//    ┌─ AP2 Mandate (who/why) ────────┐    ┌─ Settlement (how) ──────┐
+//    │  Intent Mandate                │    │  x402 EIP-712 sig       │
+//    │  Cart Mandate                  │ +  │  OR OAP-CEX HMAC token  │
+//    │  Payment Mandate               │    │  OR Solana Pay tx       │
+//    └────────────────────────────────┘    └──────────────────────────┘
+//
+//  This means OpenAgentPay can carry AP2 mandates as an outer envelope on
+//  top of ANY existing wallet/protocol — solving the "compose protocols"
+//  problem the user asked about.
+//
+// ============================================================================
+
+/** AP2 Mandate kind (W3C VC subtype). */
+export type MandateKind =
+  | "ap2.IntentMandate"     // Initial user intent + constraints
+  | "ap2.CartMandate"       // Approved final cart (merchant-signed)
+  | "ap2.PaymentMandate";   // Sent to payment network for risk assessment
+
+/**
+ * Cryptographic signature attached to a Mandate. Format follows W3C VC
+ * Data Integrity (https://www.w3.org/TR/vc-data-integrity/) but we keep
+ * the field set minimal so non-VC implementations can also sign.
+ */
+export interface MandateProof {
+  /** Signature suite identifier — e.g., "EcdsaSecp256k1Signature2019", "Ed25519Signature2020", "JsonWebSignature2020". */
+  readonly type: string;
+  /** ISO 8601 — when the proof was created. */
+  readonly created: string;
+  /** DID / URI of the signer — e.g., "did:key:z6Mk...", "https://merchant.example/keys/1". */
+  readonly verificationMethod: string;
+  /** What the proof asserts — typically "assertionMethod" for mandates. */
+  readonly proofPurpose: "assertionMethod" | "authentication";
+  /** The signature value — base64url or multibase, suite-specific. */
+  readonly proofValue: string;
+}
+
+/**
+ * AP2 Mandate envelope. All three mandate kinds share this top shape;
+ * `kind` discriminates the `claims` payload.
+ */
+export interface Mandate {
+  /** W3C VC context — ["https://www.w3.org/ns/credentials/v2"] */
+  readonly "@context": readonly string[];
+  /** Globally unique mandate id (urn:uuid:... preferred). */
+  readonly id: string;
+  /** Mandate kind — first element is "VerifiableCredential". */
+  readonly type: readonly [string, MandateKind];
+  /** Issuer DID/URI — typically the user (Intent), merchant (Cart), or PSP (Payment). */
+  readonly issuer: string;
+  /** ISO 8601 issuance timestamp. */
+  readonly issuanceDate: string;
+  /** ISO 8601 expiration — agent + merchant MUST reject if past. */
+  readonly expirationDate?: string;
+  /** Subject identifier — typically "did:openagent:<userId>" or AID. */
+  readonly credentialSubject: {
+    readonly id: string;
+    readonly mandate: IntentMandateClaims | CartMandateClaims | PaymentMandateClaims;
+  };
+  /** Cryptographic proof — REQUIRED on all mandates that cross trust boundaries. */
+  readonly proof: MandateProof;
+}
+
+/**
+ * Intent Mandate — user delegates shopping authority to an Agent with constraints.
+ * Example: "Buy concert tickets if they drop below $200, max 2 tickets, by 2026-12-31."
+ */
+export interface IntentMandateClaims {
+  readonly kind: "ap2.IntentMandate";
+  /** Free-form natural language summary — for human review. */
+  readonly description: string;
+  /** Maximum total spend across all settlements under this intent (atomic units). */
+  readonly maxAmountAtomic: string;
+  /** Currency / asset symbol the cap applies to. */
+  readonly currency: string;
+  /** Decimal places. */
+  readonly decimals: number;
+  /** Optional merchant whitelist — only these merchants may charge. */
+  readonly allowedMerchants?: readonly string[];
+  /** Optional product / category constraints. */
+  readonly productConstraints?: Record<string, unknown>;
+  /** Number of permitted settlements (e.g., 1 for single-purchase, N for subscription). */
+  readonly maxUses?: number;
+}
+
+/**
+ * Cart Mandate — merchant cryptographically commits to a specific cart that
+ * matches an Intent Mandate. Includes line items + total + merchant identity.
+ */
+export interface CartMandateClaims {
+  readonly kind: "ap2.CartMandate";
+  /** Reference to the Intent Mandate this cart fulfills (id only). */
+  readonly intentMandateId: string;
+  /** Final total in atomic units. */
+  readonly totalAtomic: string;
+  readonly currency: string;
+  readonly decimals: number;
+  /** Line items the merchant commits to deliver. */
+  readonly lineItems: ReadonlyArray<{
+    readonly sku: string;
+    readonly description: string;
+    readonly quantity: number;
+    readonly unitPriceAtomic: string;
+  }>;
+  /** Merchant identity (DID or URL). */
+  readonly merchant: string;
+  /** Optional fulfillment terms. */
+  readonly fulfillment?: Record<string, unknown>;
+}
+
+/**
+ * Payment Mandate — sent to payment network/issuer to signal Agent involvement.
+ * Carries the actual settlement instruction the wallet will execute.
+ */
+export interface PaymentMandateClaims {
+  readonly kind: "ap2.PaymentMandate";
+  /** References the Cart Mandate being paid. */
+  readonly cartMandateId: string;
+  /** Settlement protocol used at the wallet/wire layer. */
+  readonly settlementProtocol: ProtocolId;
+  /** Settlement-specific opaque payload (handed to the settlement adapter). */
+  readonly settlementPayload: Record<string, unknown>;
+  /** Hint to risk engines: "agent_present" | "agent_not_present". */
+  readonly presence: "agent_present" | "agent_not_present" | "user_present";
 }
 
 // ============================================================================
