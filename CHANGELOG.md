@@ -50,6 +50,19 @@ hedera-hcs, nevermined, open-payments, skyfire, stellar, sui, tron-usdt,
 virtuals-acp, w3c-payment. **Every Agent Payments protocol family now has a
 contract guard.**
 
+### Added — L2 real on-chain proof + CEX demo + UI truthing
+
+- **`pnpm l2:verify`** (`scripts/l2-faucet-verify.ts`): uses each connector's
+  in-process `generate*Keypair()` to mint a real address, hits the chain's
+  public faucet (no signup), and confirms the account is live on-chain.
+  Stellar testnet (Friendbot → 10000 XLM, Horizon-queryable) and Aptos devnet
+  (faucet → CoinStore live) both confirmed L1→L2.
+- **demo-api**: 3 CEX wallets (okx/bitget/bybit, OAP-CEX HMAC, auto mock
+  credentials) registered → `/api/wallets` now serves **25 live wallets**.
+- **demo-web**: Matrix header is now dynamic ("25 live wallets · 18
+  protocols"); verified via Playwright that the capability bar renders all 25
+  live chips and the Matrix grid (28 rows × 13 protocol columns) is correct.
+
 ### Fixed
 
 - Conformance caught a real bug: `wallet-near` declared native NEAR at 24
