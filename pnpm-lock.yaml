@@ -404,6 +404,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -427,6 +430,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -440,6 +446,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -453,6 +462,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -466,6 +478,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -511,6 +526,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -524,6 +542,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -537,6 +558,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -550,6 +574,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -563,6 +590,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -576,6 +606,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -589,6 +622,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -602,6 +638,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -687,6 +726,31 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.19.19)
 
+  packages/wallet-algorand:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scure/base':
+        specifier: ^1.2.0
+        version: 1.2.6
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
   packages/wallet-aptos:
     dependencies:
       '@noble/curves':
@@ -720,6 +784,94 @@ importers:
       '@openagentpay/protocol-cex-pay':
         specifier: workspace:*
         version: link:../protocol-cex-pay
+
+  packages/wallet-bitcoin:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scure/base':
+        specifier: ^1.2.0
+        version: 1.2.6
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-bitget:
+    dependencies:
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@openagentpay/protocol-cex-pay':
+        specifier: workspace:*
+        version: link:../protocol-cex-pay
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-bybit:
+    dependencies:
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@openagentpay/protocol-cex-pay':
+        specifier: workspace:*
+        version: link:../protocol-cex-pay
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-cardano:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scure/base':
+        specifier: ^1.2.0
+        version: 1.2.6
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
 
   packages/wallet-circle:
     dependencies:
@@ -785,6 +937,50 @@ importers:
       '@scure/bip39':
         specifier: ^1.6.0
         version: 1.6.0
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-crossmint:
+    dependencies:
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      viem:
+        specifier: ^2.21.0
+        version: 2.49.3(typescript@5.9.3)(zod@3.25.76)
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-fireblocks:
+    dependencies:
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      viem:
+        specifier: ^2.21.0
+        version: 2.49.3(typescript@5.9.3)(zod@3.25.76)
     devDependencies:
       '@openagentpay/conformance':
         specifier: workspace:*
@@ -877,6 +1073,75 @@ importers:
         specifier: ^2.21.0
         version: 2.49.3(typescript@5.9.3)(zod@3.25.76)
     devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-near:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scure/base':
+        specifier: ^1.2.0
+        version: 1.2.6
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-okx:
+    dependencies:
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@openagentpay/protocol-cex-pay':
+        specifier: workspace:*
+        version: link:../protocol-cex-pay
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-polkadot:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scure/base':
+        specifier: ^1.2.0
+        version: 1.2.6
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -978,6 +1243,31 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.19.19)
 
+  packages/wallet-ton:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scure/base':
+        specifier: ^1.2.0
+        version: 1.2.6
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
   packages/wallet-tron:
     dependencies:
       '@noble/curves':
@@ -1015,6 +1305,34 @@ importers:
         specifier: ^2.21.0
         version: 2.49.3(typescript@5.9.3)(zod@3.25.76)
     devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)
+
+  packages/wallet-web3auth:
+    dependencies:
+      '@noble/curves':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@openagentpay/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scure/base':
+        specifier: ^1.2.0
+        version: 1.2.6
+      viem:
+        specifier: ^2.21.0
+        version: 2.49.3(typescript@5.9.3)(zod@3.25.76)
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
