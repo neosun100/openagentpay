@@ -8,6 +8,83 @@ working snapshot.
 
 ---
 
+## [0.11.0] · 2026-05-31 — **Wallet matrix complete — "switch any chain with one line"**
+
+> **Headline**: the v0.11 ship gate is met and exceeded. The wallet matrix goes
+> from 6 → **17 connectors**, every one passing the 25-test conformance suite
+> offline AND under `OPENAGENTPAY_LIVE_TESTS` (real sign + settle). Each new
+> connector generates a **real testnet keypair in-process** — no signups, no
+> credential-pasting — so the "switch `walletProvider`, same business code"
+> claim becomes literally demonstrable across 8+ chains. Plus: financial
+> primitives productized, an HTTP auto-402 interceptor, GitHub Actions CI, and
+> protocol-level conformance v2.
+>
+> **Stats**: 53 packages · **1242 TS tests** + **52 Python tests** = **1294
+> passing** (was 666) · 18 protocols · **17 wallets** · 10 agent frameworks ·
+> 13 wallets live in the demo out of the box · zero failures.
+
+### Added — 11 new wallet connectors (matrix 6 → 17)
+
+Every connector is **cryptographically real** (verifiable signatures, correct
+on-chain address format) yet runs fully offline; on-chain broadcast stays behind
+a pluggable hook with an offline-safe default.
+
+| Wallet | Protocol | Crypto | Address proof |
+|---|---|---|---|
+| `wallet-solana` (upgraded) | solana-pay-v1 | Ed25519 + base58 | real `solana-keygen` 64-byte secret |
+| `wallet-stellar` | stellar-sep31-v1 | Ed25519 + StrKey (base32 + CRC16) | `G…` 56-char account |
+| `wallet-hedera` | hedera-hcs-v1 | Ed25519 + DER | `0.0.x` account id |
+| `wallet-sui` | sui-pay-v1 | Ed25519 + blake2b + bech32 | `0x…` + `suiprivkey1…` |
+| `wallet-aptos` | aptos-pay-v1 | Ed25519 + sha3-256 | `0x…` 64-hex |
+| `wallet-tron` | tron-usdt-v1 | secp256k1 + base58check | `T…` 34-char |
+| `wallet-cosmos` | cosmos-ibc-v1 | secp256k1 + BIP39/BIP44 + bech32 | `cosmos1…` + 24-word mnemonic |
+| `wallet-stripe-privy` | x402-v1 | secp256k1 (viem) EIP-3009 | closes AgentCore Path-D parity |
+| `wallet-circle` | x402-v1 | secp256k1 (viem) + gas-station | USDC-native |
+| `wallet-magic` | x402-v1 | secp256k1 (viem) email-bound | mainstream user wallet |
+| `wallet-zerodev` | x402-v1 | ERC-4337 smart account | on-chain spending limits |
+
+- The conformance suite caught a real latent bug in `SolanaConnector`
+  (silent-accept of empty `userId`) — same class as the v0.10 hashkey bug.
+
+### Added — financial primitives productized (`@openagentpay/core`)
+
+- **`InMemorySubscriptionManager`** — BigInt credit ledger, idempotent
+  `burnCredits`, `renew`/`cancel`/pause, expiry handling.
+- **`PaymentManager.refund()`** — settled-payment ledger with
+  `exceeds_original` / `already_refunded` / `original_not_found` /
+  `not_supported` guards; `EchoRefundExecutor` test double.
+- **Receipt issuance** — `issueReceipt` (uuid + total validation) +
+  `signReceiptHmac` / `verifyReceiptHmac` (HMAC-SHA256 over canonical JSON).
+
+### Added — `@openagentpay/http-interceptor`
+
+- `wrapFetch` / `wrapAxios` — LiteLLM-style auto-402-retry (Coinbase
+  `x402-axios` / `x402-fetch` equivalent). Dependency-light, duck-typed.
+
+### Added — CI/CD + protocol conformance v2
+
+- **`.github/workflows/ci.yml`** — TS build+test, wallet conformance
+  (offline + LIVE), Python pytest (per-package isolated). README CI badge.
+- **Protocol conformance v2** — `runProtocolConformance` wired into x402,
+  MPP, L402, AP2, OAP-CEX (was wallet-level only). Pulls a v0.14 roadmap
+  item forward.
+
+### Changed — demo surfaces the full matrix
+
+- **demo-api**: `buildSelfContainedBundles()` registers all 11 new
+  connectors → `/api/wallets` returns **13 live wallets** out of the box.
+- **demo-web**: new **Matrix** tab (wallets × protocols coverage grid) +
+  Spend Analytics v2 (hand-rolled SVG sparkline + wallet-share bars);
+  capability bar truthed to show live vs roadmap.
+
+### Fixed
+
+- `packages/pydantic-ai-plugin/README.md` was missing — its absence broke
+  `uv sync --all-packages` (hatchling requires the referenced readme).
+  Workspace sync now succeeds.
+
+---
+
 ## [0.10.0] · 2026-05-24 — **The "Crypto-Agent-Payments LiteLLM" goal: ✅ achieved**
 
 > **Headline**: OpenAgentPay reaches the "one-config-line to switch wallet"
