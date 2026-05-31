@@ -78,12 +78,45 @@ importers:
       '@openagentpay/governance':
         specifier: workspace:*
         version: link:../../packages/governance
+      '@openagentpay/wallet-aptos':
+        specifier: workspace:*
+        version: link:../../packages/wallet-aptos
+      '@openagentpay/wallet-circle':
+        specifier: workspace:*
+        version: link:../../packages/wallet-circle
       '@openagentpay/wallet-coinbase-cdp':
         specifier: workspace:*
         version: link:../../packages/wallet-coinbase-cdp
+      '@openagentpay/wallet-cosmos':
+        specifier: workspace:*
+        version: link:../../packages/wallet-cosmos
       '@openagentpay/wallet-hashkey':
         specifier: workspace:*
         version: link:../../packages/wallet-hashkey
+      '@openagentpay/wallet-hedera':
+        specifier: workspace:*
+        version: link:../../packages/wallet-hedera
+      '@openagentpay/wallet-magic':
+        specifier: workspace:*
+        version: link:../../packages/wallet-magic
+      '@openagentpay/wallet-solana':
+        specifier: workspace:*
+        version: link:../../packages/wallet-solana
+      '@openagentpay/wallet-stellar':
+        specifier: workspace:*
+        version: link:../../packages/wallet-stellar
+      '@openagentpay/wallet-stripe-privy':
+        specifier: workspace:*
+        version: link:../../packages/wallet-stripe-privy
+      '@openagentpay/wallet-sui':
+        specifier: workspace:*
+        version: link:../../packages/wallet-sui
+      '@openagentpay/wallet-tron':
+        specifier: workspace:*
+        version: link:../../packages/wallet-tron
+      '@openagentpay/wallet-zerodev':
+        specifier: workspace:*
+        version: link:../../packages/wallet-zerodev
       cors:
         specifier: ^2.8.5
         version: 2.8.6
