@@ -78,9 +78,18 @@ importers:
       '@openagentpay/governance':
         specifier: workspace:*
         version: link:../../packages/governance
+      '@openagentpay/wallet-algorand':
+        specifier: workspace:*
+        version: link:../../packages/wallet-algorand
       '@openagentpay/wallet-aptos':
         specifier: workspace:*
         version: link:../../packages/wallet-aptos
+      '@openagentpay/wallet-bitcoin':
+        specifier: workspace:*
+        version: link:../../packages/wallet-bitcoin
+      '@openagentpay/wallet-cardano':
+        specifier: workspace:*
+        version: link:../../packages/wallet-cardano
       '@openagentpay/wallet-circle':
         specifier: workspace:*
         version: link:../../packages/wallet-circle
@@ -90,6 +99,12 @@ importers:
       '@openagentpay/wallet-cosmos':
         specifier: workspace:*
         version: link:../../packages/wallet-cosmos
+      '@openagentpay/wallet-crossmint':
+        specifier: workspace:*
+        version: link:../../packages/wallet-crossmint
+      '@openagentpay/wallet-fireblocks':
+        specifier: workspace:*
+        version: link:../../packages/wallet-fireblocks
       '@openagentpay/wallet-hashkey':
         specifier: workspace:*
         version: link:../../packages/wallet-hashkey
@@ -99,6 +114,12 @@ importers:
       '@openagentpay/wallet-magic':
         specifier: workspace:*
         version: link:../../packages/wallet-magic
+      '@openagentpay/wallet-near':
+        specifier: workspace:*
+        version: link:../../packages/wallet-near
+      '@openagentpay/wallet-polkadot':
+        specifier: workspace:*
+        version: link:../../packages/wallet-polkadot
       '@openagentpay/wallet-solana':
         specifier: workspace:*
         version: link:../../packages/wallet-solana
@@ -111,9 +132,15 @@ importers:
       '@openagentpay/wallet-sui':
         specifier: workspace:*
         version: link:../../packages/wallet-sui
+      '@openagentpay/wallet-ton':
+        specifier: workspace:*
+        version: link:../../packages/wallet-ton
       '@openagentpay/wallet-tron':
         specifier: workspace:*
         version: link:../../packages/wallet-tron
+      '@openagentpay/wallet-web3auth':
+        specifier: workspace:*
+        version: link:../../packages/wallet-web3auth
       '@openagentpay/wallet-zerodev':
         specifier: workspace:*
         version: link:../../packages/wallet-zerodev

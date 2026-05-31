@@ -1,5 +1,5 @@
 /**
- * Self-contained wallet bundles — the 11 connectors added in v0.11 that need
+ * Self-contained wallet bundles — the 20 connectors added in v0.11 that need
  * NO external credentials. Each generates a real testnet keypair in-process
  * (Ed25519 / secp256k1 / BIP39) and registers unconditionally, so the demo-web
  * capability bar shows the full multi-chain matrix out of the box.
@@ -74,6 +74,49 @@ import {
   RealZeroDevSigner,
   MemoryInstrumentStore as ZeroDevStore,
 } from "@openagentpay/wallet-zerodev";
+import {
+  NearConnector,
+  RealNearSigner,
+  MemoryInstrumentStore as NearStore,
+} from "@openagentpay/wallet-near";
+import {
+  AlgorandConnector,
+  RealAlgorandSigner,
+  MemoryInstrumentStore as AlgorandStore,
+} from "@openagentpay/wallet-algorand";
+import {
+  CardanoConnector,
+  RealCardanoSigner,
+  MemoryInstrumentStore as CardanoStore,
+} from "@openagentpay/wallet-cardano";
+import {
+  TonConnector,
+  RealTonSigner,
+  MemoryInstrumentStore as TonStore,
+} from "@openagentpay/wallet-ton";
+import {
+  PolkadotConnector,
+  RealPolkadotSigner,
+  MemoryInstrumentStore as PolkadotStore,
+} from "@openagentpay/wallet-polkadot";
+import {
+  BitcoinConnector,
+  RealBitcoinSigner,
+  MemoryInstrumentStore as BitcoinStore,
+} from "@openagentpay/wallet-bitcoin";
+import {
+  Web3AuthConnector,
+  MemoryInstrumentStore as Web3AuthStore,
+} from "@openagentpay/wallet-web3auth";
+import {
+  CrossmintConnector,
+  MemoryInstrumentStore as CrossmintStore,
+} from "@openagentpay/wallet-crossmint";
+import {
+  FireblocksConnector,
+  RealFireblocksSigner,
+  MemoryInstrumentStore as FireblocksStore,
+} from "@openagentpay/wallet-fireblocks";
 
 // ----------------------------------------------------------------------------
 //  Bundle helper — fills ConnectorBundle metadata for a self-contained wallet
@@ -106,7 +149,7 @@ function bundleOf(opts: {
 }
 
 /**
- * Build all 11 self-contained connector bundles. Each instantiates its
+ * Build all 20 self-contained connector bundles. Each instantiates its
  * connector with a freshly-generated in-process testnet keypair.
  */
 export function buildSelfContainedBundles(): ConnectorBundle[] {
@@ -366,6 +409,215 @@ export function buildSelfContainedBundles(): ConnectorBundle[] {
         chainName: "Base Sepolia",
         chainId: 84532,
         tokenLabel: "USDC (smart account)",
+        tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://sepolia.basescan.org/address/${a}`,
+        txExplorer: (h) => `https://sepolia.basescan.org/tx/${h}`,
+      })
+    );
+  }
+
+  // --- NEAR (Ed25519 implicit account, NEP-141 USDC) ---
+  {
+    const signer = new RealNearSigner({ network: "testnet" });
+    const connector = new NearConnector({
+      signer,
+      instrumentStore: new NearStore(),
+      network: "testnet",
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: signer.accountId,
+        chainName: "NEAR Testnet",
+        chainId: 0,
+        tokenLabel: "USDC (NEP-141)",
+        tokenAddress:
+          "3e2210e1184b45b64c8a434c0a7e7b23cc04ea7eb7a6c3c32520d03d4afcb8af",
+        tokenDecimals: 6,
+        addressExplorer: (a) =>
+          `https://explorer.testnet.near.org/accounts/${a}`,
+        txExplorer: (h) =>
+          `https://explorer.testnet.near.org/transactions/${h}`,
+      })
+    );
+  }
+
+  // --- Algorand (Ed25519 base32 checksum, ASA USDC) ---
+  {
+    const signer = new RealAlgorandSigner({ network: "testnet" });
+    const connector = new AlgorandConnector({
+      signer,
+      instrumentStore: new AlgorandStore(),
+      network: "testnet",
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: signer.address,
+        chainName: "Algorand Testnet",
+        chainId: 0,
+        tokenLabel: "USDC (ASA)",
+        tokenAddress: "10458941",
+        tokenDecimals: 6,
+        addressExplorer: (a) =>
+          `https://testnet.explorer.perawallet.app/address/${a}`,
+        txExplorer: (h) => `https://testnet.explorer.perawallet.app/tx/${h}`,
+      })
+    );
+  }
+
+  // --- Cardano (Ed25519 blake2b-224 bech32 enterprise addr, USDM) ---
+  {
+    const signer = new RealCardanoSigner({ network: "testnet" });
+    const connector = new CardanoConnector({
+      signer,
+      instrumentStore: new CardanoStore(),
+      network: "testnet",
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: signer.address,
+        chainName: "Cardano Preprod",
+        chainId: 0,
+        tokenLabel: "USDM (Cardano)",
+        tokenAddress:
+          "c48cbb3d5e57ed56e276bc45f99ab39abe94e6cd7ac39fb402da47ad0014df105553444d",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://preprod.cardanoscan.io/address/${a}`,
+        txExplorer: (h) => `https://preprod.cardanoscan.io/transaction/${h}`,
+      })
+    );
+  }
+
+  // --- TON (Ed25519, jetton USDT) ---
+  {
+    const signer = new RealTonSigner({ network: "testnet" });
+    const connector = new TonConnector({
+      signer,
+      instrumentStore: new TonStore(),
+      network: "testnet",
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: signer.address,
+        chainName: "TON Testnet",
+        chainId: 0,
+        tokenLabel: "USDT (jetton)",
+        tokenAddress: "kQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://testnet.tonscan.org/address/${a}`,
+        txExplorer: (h) => `https://testnet.tonscan.org/tx/${h}`,
+      })
+    );
+  }
+
+  // --- Polkadot (Ed25519 SS58, Westend; USDt asset-hub) ---
+  {
+    const signer = new RealPolkadotSigner({ network: "westend" });
+    const connector = new PolkadotConnector({
+      signer,
+      instrumentStore: new PolkadotStore(),
+      network: "westend",
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: signer.address,
+        chainName: "Polkadot Westend",
+        chainId: 0,
+        tokenLabel: "USDt (Westend)",
+        tokenAddress: "1984",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://westend.subscan.io/account/${a}`,
+        txExplorer: (h) => `https://westend.subscan.io/extrinsic/${h}`,
+      })
+    );
+  }
+
+  // --- Bitcoin (secp256k1 SegWit P2WPKH bech32, native BTC) ---
+  {
+    const signer = new RealBitcoinSigner({ network: "testnet" });
+    const connector = new BitcoinConnector({
+      signer,
+      instrumentStore: new BitcoinStore(),
+      network: "testnet",
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: signer.address,
+        chainName: "Bitcoin Testnet",
+        chainId: 0,
+        tokenLabel: "BTC (testnet)",
+        tokenAddress: "btc",
+        tokenDecimals: 8,
+        addressExplorer: (a) => `https://blockstream.info/testnet/address/${a}`,
+        txExplorer: (h) => `https://blockstream.info/testnet/tx/${h}`,
+      })
+    );
+  }
+
+  // --- Web3Auth (social-login MPC EVM, Base Sepolia, x402 USDC) ---
+  {
+    const connector = new Web3AuthConnector({
+      loginProvider: "google",
+      verifierId: "agent+oap@openagentpay.dev",
+      instrumentStore: new Web3AuthStore(),
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: connector.walletAddress,
+        chainName: "Base Sepolia",
+        chainId: 84532,
+        tokenLabel: "USDC (social-login MPC)",
+        tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://sepolia.basescan.org/address/${a}`,
+        txExplorer: (h) => `https://sepolia.basescan.org/tx/${h}`,
+      })
+    );
+  }
+
+  // --- Crossmint (NFT-aware embedded EVM, Base Sepolia, x402 USDC) ---
+  {
+    const connector = new CrossmintConnector({
+      apiKey: "sk_test_demo",
+      projectId: "demo-project",
+      instrumentStore: new CrossmintStore(),
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: connector.walletAddress,
+        chainName: "Base Sepolia",
+        chainId: 84532,
+        tokenLabel: "USDC (embedded wallet)",
+        tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://sepolia.basescan.org/address/${a}`,
+        txExplorer: (h) => `https://sepolia.basescan.org/tx/${h}`,
+      })
+    );
+  }
+
+  // --- Fireblocks (institutional MPC custody EVM, Base Sepolia, EIP-3009) ---
+  {
+    const signer = new RealFireblocksSigner({});
+    const connector = new FireblocksConnector({
+      signer,
+      instrumentStore: new FireblocksStore(),
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: connector.vaultAddress,
+        chainName: "Base Sepolia",
+        chainId: 84532,
+        tokenLabel: "USDC (MPC custody)",
         tokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         tokenDecimals: 6,
         addressExplorer: (a) => `https://sepolia.basescan.org/address/${a}`,
