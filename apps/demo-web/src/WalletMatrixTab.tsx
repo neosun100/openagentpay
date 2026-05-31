@@ -146,7 +146,7 @@ export function WalletMatrixTab(): JSX.Element {
           </p>
         </div>
         <div className="matrix-stat">
-          <span className="matrix-stat-num">17</span> wallets
+          <span className="matrix-stat-num">{liveCount}</span> live wallets
           <span className="matrix-stat-sep">·</span>
           <span className="matrix-stat-num">18</span> protocols
           <span className="matrix-stat-sep">·</span>
