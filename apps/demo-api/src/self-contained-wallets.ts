@@ -117,6 +117,20 @@ import {
   RealFireblocksSigner,
   MemoryInstrumentStore as FireblocksStore,
 } from "@openagentpay/wallet-fireblocks";
+import {
+  OkxPayConnector,
+  MemoryInstrumentStore as OkxStore,
+} from "@openagentpay/wallet-okx";
+import {
+  BitgetPayConnector,
+  RealBitgetSigner,
+  MemoryInstrumentStore as BitgetStore,
+} from "@openagentpay/wallet-bitget";
+import {
+  BybitPayConnector,
+  generateBybitKeypair,
+  MemoryInstrumentStore as BybitStore,
+} from "@openagentpay/wallet-bybit";
 
 // ----------------------------------------------------------------------------
 //  Bundle helper — fills ConnectorBundle metadata for a self-contained wallet
@@ -622,6 +636,68 @@ export function buildSelfContainedBundles(): ConnectorBundle[] {
         tokenDecimals: 6,
         addressExplorer: (a) => `https://sepolia.basescan.org/address/${a}`,
         txExplorer: (h) => `https://sepolia.basescan.org/tx/${h}`,
+      })
+    );
+  }
+
+  // --- OKX Pay (OAP-CEX HMAC, auto-generated credential) ---
+  {
+    const connector = new OkxPayConnector({ instrumentStore: new OkxStore() });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: connector.subAccountId,
+        chainName: "OKX (CEX)",
+        chainId: 0,
+        tokenLabel: "USDT (OAP-CEX)",
+        tokenAddress: "USDT",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://www.okx.com/account/${a}`,
+        txExplorer: (h) => `https://www.okx.com/balance/transaction/${h}`,
+      })
+    );
+  }
+
+  // --- Bitget Wallet Pay (OAP-CEX HMAC) ---
+  {
+    const signer = new RealBitgetSigner({});
+    const connector = new BitgetPayConnector({
+      signer,
+      instrumentStore: new BitgetStore(),
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: signer.merchantId,
+        chainName: "Bitget (CEX)",
+        chainId: 0,
+        tokenLabel: "USDT (OAP-CEX)",
+        tokenAddress: "USDT",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://www.bitget.com/asset/${a}`,
+        txExplorer: (h) => `https://www.bitget.com/asset/record/${h}`,
+      })
+    );
+  }
+
+  // --- Bybit Pay (OAP-CEX HMAC) ---
+  {
+    const credential = generateBybitKeypair();
+    const connector = new BybitPayConnector({
+      credential,
+      instrumentStore: new BybitStore(),
+    });
+    bundles.push(
+      bundleOf({
+        connector,
+        agentAddress: credential.accountId,
+        chainName: "Bybit (CEX)",
+        chainId: 0,
+        tokenLabel: "USDT (OAP-CEX)",
+        tokenAddress: "USDT",
+        tokenDecimals: 6,
+        addressExplorer: (a) => `https://www.bybit.com/user/assets/${a}`,
+        txExplorer: (h) => `https://www.bybit.com/user/assets/order/${h}`,
       })
     );
   }

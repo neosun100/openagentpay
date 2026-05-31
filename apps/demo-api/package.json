@@ -40,6 +40,9 @@
     "@openagentpay/wallet-web3auth": "workspace:*",
     "@openagentpay/wallet-crossmint": "workspace:*",
     "@openagentpay/wallet-fireblocks": "workspace:*",
+    "@openagentpay/wallet-okx": "workspace:*",
+    "@openagentpay/wallet-bitget": "workspace:*",
+    "@openagentpay/wallet-bybit": "workspace:*",
     "@openagentpay/governance": "workspace:*",
     "@aws-sdk/client-dynamodb": "^3.700.0",
     "@aws-sdk/lib-dynamodb": "^3.700.0"

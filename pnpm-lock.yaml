@@ -87,6 +87,12 @@ importers:
       '@openagentpay/wallet-bitcoin':
         specifier: workspace:*
         version: link:../../packages/wallet-bitcoin
+      '@openagentpay/wallet-bitget':
+        specifier: workspace:*
+        version: link:../../packages/wallet-bitget
+      '@openagentpay/wallet-bybit':
+        specifier: workspace:*
+        version: link:../../packages/wallet-bybit
       '@openagentpay/wallet-cardano':
         specifier: workspace:*
         version: link:../../packages/wallet-cardano
@@ -117,6 +123,9 @@ importers:
       '@openagentpay/wallet-near':
         specifier: workspace:*
         version: link:../../packages/wallet-near
+      '@openagentpay/wallet-okx':
+        specifier: workspace:*
+        version: link:../../packages/wallet-okx
       '@openagentpay/wallet-polkadot':
         specifier: workspace:*
         version: link:../../packages/wallet-polkadot
