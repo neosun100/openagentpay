@@ -35,7 +35,7 @@ L0 CLI       — `oap` (config/doctor/conformance) + `oap-proxy` (yaml-driven)
 L1 Plugin    — 10 frameworks (langchain/llamaindex/mastra/vercel-ai/langgraph + 5 Python)
 L2 Orchestration — PaymentManager + ProtocolRouter + WalletRouter + finance + Guardrail
 L3 Protocol  — 18 ProtocolAdapters
-L4 Wallet    — 17 WalletConnectors (v0.11 ✅; 13 live in demo)
+L4 Wallet    — 28 WalletConnectors (v0.11.1 ✅; 22 live in demo)
 L5 Settlement — chain RPC / CEX REST / Solana RPC / IBC / Hedera Mirror
 ```
 
@@ -44,10 +44,11 @@ L5 Settlement — chain RPC / CEX REST / Solana RPC / IBC / Hedera Mirror
 ## 📊 Current state (snapshot — re-verify with `pnpm -r test`)
 
 ```
-Tests: 1294 passing (TS 1242 + Python 52)
-Packages: 53
-Wallets: 17 connectors (13 live in demo)
-Latest version: v0.11.0 (shipped 2026-05-31)
+Tests: 2045 passing (TS 1993 + Python 52)
+Packages: 65
+Wallets: 28 connectors (22 live in demo)
+Protocols: 18 adapters (all 18 conformance-green)
+Latest version: v0.11.1 (shipped 2026-05-31)
 Live URL: https://d1p7yxa99nxaye.cloudfront.net
 CI: .github/workflows/ci.yml
 ```

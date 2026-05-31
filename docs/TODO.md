@@ -189,7 +189,7 @@ I can do these without you needing to register anything.
 
 ```
 v0.11 wallet integration matrix:
-[████████████████████] 17 / 19 wallets    ✅ SHIPPED (lightning + open-payments deferred — need live nodes)
+[████████████████████] 28 wallets · 18/18 protocols    ✅ v0.11.1 breadth pass complete
 
 v1.0 readiness (subjective):
 [██████████████████░░] 90%
@@ -204,5 +204,5 @@ v1.0 readiness (subjective):
 
 ---
 
-*Last updated: 2026-05-31 — v0.11.0 shipped (1294 tests, 17 wallets, CI live)*
+*Last updated: 2026-05-31 — v0.11.1 breadth pass (2045 tests, 28 wallets, 18/18 protocols conformance)*
 *Update protocol: when a task moves status, update the row + bump the "Last updated" line.*
