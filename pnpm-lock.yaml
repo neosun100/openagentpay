@@ -388,6 +388,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -413,6 +416,10 @@ importers:
       '@openagentpay/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
 
   packages/protocol-cosmos-ibc:
     dependencies:
@@ -472,6 +479,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -485,6 +495,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -602,6 +615,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@openagentpay/conformance':
+        specifier: workspace:*
+        version: link:../conformance
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
