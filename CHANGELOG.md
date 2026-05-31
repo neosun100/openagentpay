@@ -8,6 +8,57 @@ working snapshot.
 
 ---
 
+## [0.11.1] · 2026-05-31 — **Breadth pass — 28 wallets · 18/18 protocols conformance-covered**
+
+> **Headline**: a coverage-breadth expansion on top of v0.11.0. The wallet
+> matrix goes **17 → 28 connectors** (added 6 new L1 chains + 3 institutional
+> EVM wallets + 3 CEX), and **every one of the 18 protocol adapters now has a
+> conformance suite** (was 5). Each new wallet generates a real testnet keypair
+> in-process and passes all 25 conformance tests offline AND under
+> `OPENAGENTPAY_LIVE_TESTS`.
+>
+> **Stats**: **1993 TS tests + 52 Python = 2045 passing** (was 666 at v0.10,
+> 1294 at v0.11.0) · 18/18 protocols conformance-green · 28 wallet connectors ·
+> zero failures.
+
+### Added — 12 new wallet connectors (matrix 17 → 28)
+
+New L1 chains (in-process real keypairs, conformance-green offline + LIVE):
+
+| Wallet | Protocol | Crypto | Address |
+|---|---|---|---|
+| `wallet-near` | near-pay-v1 | Ed25519 | implicit 64-hex account |
+| `wallet-algorand` | algorand-pay-v1 | Ed25519 + base32 checksum | 58-char uppercase |
+| `wallet-cardano` | cardano-pay-v1 | Ed25519 + blake2b-224 + bech32 | `addr_test1…` |
+| `wallet-ton` | ton-pay-v1 | Ed25519 + CRC16 + base64url | 48-char |
+| `wallet-polkadot` | polkadot-pay-v1 | Ed25519 + SS58 + blake2b | SS58 base58 |
+| `wallet-bitcoin` | bitcoin-pay-v1 | secp256k1 + segwit bech32 | `tb1q…` P2WPKH |
+
+Institutional / embedded (EVM via viem, EIP-3009):
+
+- `wallet-web3auth` (social-login MPC), `wallet-crossmint` (NFT-aware
+  embedded), `wallet-fireblocks` (institutional MPC custody).
+
+CEX (OAP-CEX HMAC, mirror wallet-binance):
+
+- `wallet-okx`, `wallet-bitget`, `wallet-bybit`.
+
+### Added — protocol conformance for the remaining 13 adapters (5 → 18/18)
+
+`runProtocolConformance` wired into: aptos, cosmos-ibc, erc7777, erc8004,
+hedera-hcs, nevermined, open-payments, skyfire, stellar, sui, tron-usdt,
+virtuals-acp, w3c-payment. **Every Agent Payments protocol family now has a
+contract guard.**
+
+### Fixed
+
+- Conformance caught a real bug: `wallet-near` declared native NEAR at 24
+  decimals, violating the WalletConnector contract's 18-decimal ceiling.
+  Fixed to expose USDC (6dp) as the payment asset + surface native-NEAR's
+  24dp via the `nativeNearDecimals` capability feature.
+
+---
+
 ## [0.11.0] · 2026-05-31 — **Wallet matrix complete — "switch any chain with one line"**
 
 > **Headline**: the v0.11 ship gate is met and exceeded. The wallet matrix goes

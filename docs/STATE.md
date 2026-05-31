@@ -12,13 +12,13 @@
 
 ---
 
-## 📊 Current state (post-v0.11.0 · last working session 2026-05-31)
+## 📊 Current state (post-v0.11.1 · last working session 2026-05-31)
 
 ```
-Tests:        1294 passing     (TS 1242 + Python 52)   ← was 666 at v0.10
-Packages:     53                (was 40)
-Protocols:    18 ProtocolAdapters  (+ protocol conformance v2 on 5 of them)
-Wallets:      17 WalletConnectors   ← was 6; the v0.11 headline. 13 live in demo.
+Tests:        2045 passing     (TS 1993 + Python 52)   ← was 666 at v0.10 (3.07×)
+Packages:     65                (was 40)
+Protocols:    18 ProtocolAdapters  ← ALL 18 conformance-green (was 5)
+Wallets:      28 WalletConnectors   ← was 6; breadth pass complete
 Frameworks:   10 plugins             (5 TS + 5 Python)
 Layers:        L0 CLI · L1 Plugin · L2 Orchestration · L3 Protocol · L4 Wallet · L5 Settlement
 Live URL:     https://d1p7yxa99nxaye.cloudfront.net  (AWS us-east-1)
